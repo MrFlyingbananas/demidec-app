@@ -6,11 +6,15 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import javax.swing.text.Utilities;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -25,9 +29,10 @@ public class QuestionPane extends JPanel implements ActionListener {
         Correct,
         Incorrect
     }
-    private final float V_QUESTION_PERCENT_SIZE = .25f, WINDOW_BUFFER = .06f, ANSWER_BUTTON_SPACE_TAKEN = .8f, X_OBJECT_BUFFER = .05f;
+    private final float V_QUESTION_PERCENT_SIZE = .25f, WINDOW_BUFFER = .06f, ANSWER_BUTTON_SPACE_TAKEN = .8f, X_OBJECT_BUFFER = .05f, NEXT_BUTTON_WIDTH = .2f, NEXT_BUTTON_HEIGHT = .1f;
     private JFrame frame;
     private JButton[] buttons;
+    //private JButton nextButton;
     private JTextPane[] choices;
     private JTextPane questionPane;
     private int width, height;
@@ -35,7 +40,7 @@ public class QuestionPane extends JPanel implements ActionListener {
     private List<Question> questionList;
     private Question question;
     private DBReader dbReader;
-    private QuestionResultPane resultPane;
+    private boolean questionAnswered;
     public QuestionPane(JFrame frame, Connection con){
         dbReader = new DBReader(con);
         this.frame = frame;
@@ -47,6 +52,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         buttons = new JButton[5];
         choices = new JTextPane[5];
         setMinimumSize(new Dimension(400, 400));
+        setPreferredSize(new Dimension(600, 600));
         init();
         frame.addComponentListener(new ComponentAdapter() {
             @Override
@@ -57,7 +63,6 @@ public class QuestionPane extends JPanel implements ActionListener {
                 triggerResize();
             }
         });
-        resultPane = new QuestionResultPane();
     }
 
     @Override
@@ -69,12 +74,14 @@ public class QuestionPane extends JPanel implements ActionListener {
         int xWindowBuffer = (int)(WINDOW_BUFFER * width);
         int yWindowBuffer = (int)(WINDOW_BUFFER * height);
         questionPane = new JTextPane();
-        questionPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
         questionPane.setLocation(xWindowBuffer / 2, yWindowBuffer / 2);
-        questionPane.setSize(width - xWindowBuffer * 2, (int)(height * V_QUESTION_PERCENT_SIZE));
+        questionPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
+        questionPane.setSize(width - (int)(xWindowBuffer * 1.5), (int)(height * V_QUESTION_PERCENT_SIZE));
         questionPane.setEditable(false);
         questionPane.setContentType("text/html");
         questionPane.setText(question.getText());
+        questionPane.setHighlighter(null);
+        questionPane.setMargin(new Insets(10,10,10,10));
         resizeQuestion();
         buttons[0] = new JButton("A");
         buttons[1] = new JButton("B");
@@ -99,22 +106,34 @@ public class QuestionPane extends JPanel implements ActionListener {
             choices[i].setBorder(javax.swing.BorderFactory.createEmptyBorder());
             choices[i].setBackground(this.getBackground());
             choices[i].setText(qChoices[i]);
+            choices[i].setHighlighter(null);
+            choices[i].setEditable(false);
         }
         resizeChoices();
         for(int i = 0; i < buttons.length; i++){
             add(buttons[i]);
             add(choices[i]);
         }
+        //nextButton = new JButton("Next Question");
+        //nextButton.addActionListener(this);
+        //resizeNextButton();
         this.add(questionPane);
+        questionAnswered = false;
+        frame.pack();
     }
 
     private void answerQuestion(int selectedIndex) {
+        questionAnswered = true;
         if(selectedIndex == question.getCorrectAnswerIndex()){
-
+            questionPane.setText("That is correct! " + question.getAnswerGuide() + " Click the correct answer to continue.");
         }else{
-
+            questionPane.setText("Sorry, that's incorrect. " +  question.getAnswerGuide() + " Click the correct answer to continue.");
+            choices[selectedIndex].setText("<font color=\"#FF0000\">" + question.getChoices()[selectedIndex] + " </font>");
         }
-
+        choices[question.getCorrectAnswerIndex()].setText("<font color=\"#008000\">" + question.getChoices()[question.getCorrectAnswerIndex()] + " </font>");
+        resizeQuestion();
+        //resizeNextButton();
+        //this.add(nextButton);
     }
 
     private void nextQuestion(){
@@ -126,28 +145,34 @@ public class QuestionPane extends JPanel implements ActionListener {
         }
         resizeQuestion();
         resizeChoices();
+        questionAnswered = false;
+        //this.remove(nextButton);
     }
 
+   // private void resizeNextButton() {
+   //    int xWindowBuffer = (int)(WINDOW_BUFFER * width);
+    //    int yWindowBuffer = (int)(WINDOW_BUFFER * height);
+   // }
+
     public void triggerResize(){
-        if(frame.getContentPane().equals(this)){
-            width = (int)frame.getPreferredSize().getWidth();
-            height = (int)frame.getPreferredSize().getHeight();
-            int xWindowBuffer = (int)(WINDOW_BUFFER * width);
-            int yWindowBuffer = (int)(WINDOW_BUFFER * height);
-            questionPane.setLocation(xWindowBuffer / 2, yWindowBuffer / 2);
-            questionPane.setSize(width - (int)(xWindowBuffer * 1.5), (int)(height * V_QUESTION_PERCENT_SIZE));
-            int remainingSpace = height - questionPane.getY() - questionPane.getHeight() -yWindowBuffer;
-            int answerBoxSize = (int)((remainingSpace * ANSWER_BUTTON_SPACE_TAKEN) / 5);
-            int yObjectBuffer = (remainingSpace - (answerBoxSize * 5)) / 6;
-            buttons[0].setBounds(xWindowBuffer, questionPane.getY() + questionPane.getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
-            for(int i = 1; i < buttons.length; i++){
-                buttons[i].setBounds(xWindowBuffer, buttons[i - 1].getY() + buttons[i - 1].getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
-            }
-            resizeQuestion();
-            resizeChoices();
-        }else{
-            resultPane.triggerResize();
+        width = (int) frame.getPreferredSize().getWidth();
+        height = (int) frame.getPreferredSize().getHeight();
+        int xWindowBuffer = (int) (WINDOW_BUFFER * width);
+        int yWindowBuffer = (int) (WINDOW_BUFFER * height);
+        questionPane.setLocation(xWindowBuffer / 2, yWindowBuffer / 2);
+        questionPane.setSize(width - (int) (xWindowBuffer * 1.5), (int) (height * V_QUESTION_PERCENT_SIZE));
+        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer;
+        int answerBoxSize = (int) ((remainingSpace * ANSWER_BUTTON_SPACE_TAKEN) / 5);
+        int yObjectBuffer = (remainingSpace - (answerBoxSize * 5)) / 6;
+        buttons[0].setBounds(xWindowBuffer, questionPane.getY() + questionPane.getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
+        for (int i = 1; i < buttons.length; i++) {
+            buttons[i].setBounds(xWindowBuffer, buttons[i - 1].getY() + buttons[i - 1].getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
         }
+        resizeQuestion();
+        resizeChoices();
+        //if(questionAnswered)
+        //   resizeNextButton();
+
     }
     private void resizeQuestion(){
         qFont = new Font("Times New Roman", Font.PLAIN, 80);
@@ -185,7 +210,7 @@ public class QuestionPane extends JPanel implements ActionListener {
             }
         }*/
         while(lines * lineHeight > questionPane.getHeight()){
-            qFont = new Font(qFont.getFontName(), qFont.getStyle(), qFont.getSize() - 1);
+            qFont = new Font(qFont.getFontName(), qFont.getStyle(), qFont.getSize() - 2);
             lineHeight = questionPane.getFontMetrics(questionPane.getFont()).getHeight() + questionPane.getFontMetrics(qFont).getMaxDescent();
             questionPane.setFont(qFont);
             start = 0;
@@ -201,6 +226,11 @@ public class QuestionPane extends JPanel implements ActionListener {
                 e.printStackTrace();
             }
         }
+        questionPane.setFont(qFont);
+        StyledDocument doc = questionPane.getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), center, false);
     }
     private void resizeChoices(){
         String[] qChoices = question.getChoices();
@@ -334,36 +364,25 @@ public class QuestionPane extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(e.getSource() == buttons[0]){
-            answerQuestion(0);
-            System.out.println("test");
-        }else if(e.getSource() == buttons[1]){
-            answerQuestion(1);
-        }else if(e.getSource() == buttons[2]){
-            answerQuestion(2);
-        }else if(e.getSource() == buttons[3]){
-            answerQuestion(3);
-        }else if(e.getSource() == buttons[4]){
-            answerQuestion(4);
+        if(!questionAnswered){
+            if(e.getSource() == buttons[0]){
+                answerQuestion(0);
+            }else if(e.getSource() == buttons[1]){
+                answerQuestion(1);
+            }else if(e.getSource() == buttons[2]){
+                answerQuestion(2);
+            }else if(e.getSource() == buttons[3]){
+                answerQuestion(3);
+            }else if(e.getSource() == buttons[4]){
+                answerQuestion(4);
+            }
+        }else{
+            //if(e.getSource() == nextButton){
+            //    nextQuestion();
+            //}
+            if(e.getSource() == buttons[question.getCorrectAnswerIndex()])
+                nextQuestion();
         }
-    }
-
-    private class QuestionResultPane extends JPanel{
-        JButton nextButton;
-        public QuestionResultPane() {
-            width = (int)frame.getPreferredSize().getWidth();
-            height = (int)frame.getPreferredSize().getHeight();
-            int xWindowBuffer = (int)(WINDOW_BUFFER * width);
-            int yWindowBuffer = (int)(WINDOW_BUFFER * height);
-            nextButton = new JButton("Next Question");
-            resizeButtons();
-        }
-        public void triggerResize(){
-            resizeButtons();
-        }
-    }
-
-    private void resizeButtons() {
 
     }
 }

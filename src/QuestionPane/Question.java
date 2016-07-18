@@ -8,6 +8,7 @@ import java.util.Random;
  * Created by cisom on 6/24/16.
  */
 public class Question {
+
     enum QDataID{
         QuestionID("QuestionID"),
         Question("Question"),
@@ -44,16 +45,17 @@ public class Question {
     private String text;
     private String[] choices;
     private int correctAnswerIndex;
+    private String answerGuide;
     public Question(ResultSet rs){
         try {
             Random random = new Random();
             text = rs.getString(QDataID.Question.getID()).trim().replace("\n", "").replace("\r", "");
             choices = new String[5];
-            choices[0] = "<html>" + rs.getString(QDataID.QAnswer1.getID()) + "</html>";
-            choices[1] = "<html>" + rs.getString(QDataID.QAnswer2.getID()) + "</html>";
-            choices[2] = "<html>" + rs.getString(QDataID.QAnswer3.getID()) + "</html>";
-            choices[3] = "<html>" + rs.getString(QDataID.QAnswer4.getID()) + "</html>";
-            choices[4] = "<html>" + rs.getString(QDataID.QAnswer5.getID()) + "</html>";
+            choices[0] = rs.getString(QDataID.QAnswer1.getID());
+            choices[1] = rs.getString(QDataID.QAnswer2.getID());
+            choices[2] = rs.getString(QDataID.QAnswer3.getID());
+            choices[3] = rs.getString(QDataID.QAnswer4.getID());
+            choices[4] = rs.getString(QDataID.QAnswer5.getID());
             for(int i =0; i < choices.length; i++){
                 if(choices[i].contains("<chr")){
                     while(choices[i].contains("<chr")){
@@ -62,6 +64,14 @@ public class Question {
                                 (char)Integer.parseInt(choices[i].substring(loc + 4, loc + 8)) + choices[i].substring(loc + 9);
 
                     }
+                }
+            }
+            if(text.contains("<chr")){
+                while(text.contains("<chr")){
+                    int loc = text.indexOf("<chr");
+                    text = text.substring(0, loc) +
+                            (char)Integer.parseInt(text.substring(loc + 4, loc + 8)) + text.substring(loc + 9);
+
                 }
             }
             int index;
@@ -77,7 +87,7 @@ public class Question {
                 choices[index] = choices[i];
                 choices[i] = temp;
             }
-
+            answerGuide = rs.getString(QDataID.AnswerGuide.getID());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -89,4 +99,5 @@ public class Question {
         return text;
     }
     public int getCorrectAnswerIndex() { return correctAnswerIndex; }
+    public String getAnswerGuide() { return answerGuide; }
 }
