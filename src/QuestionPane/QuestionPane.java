@@ -21,7 +21,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.sql.Connection;
 import java.util.List;
 /**
  * Created by 120658 on 3/15/2016.
@@ -42,21 +41,19 @@ public class QuestionPane extends JPanel implements ActionListener {
     private Font qFont, cFont;
     private List<Question> questionList;
     private Question question;
-    private DBReader dbReader;
     private boolean questionAnswered;
-    public QuestionPane(JFrame frame, Connection con){
-        dbReader = new DBReader(con);
+    public QuestionPane(JFrame frame){
         this.frame = frame;
         this.setLayout(null);
         width = (int)frame.getPreferredSize().getWidth();
         height = (int)frame.getPreferredSize().getHeight();
-        questionList = dbReader.getQuestionListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Normal);
+        questionList = DBReader.getQuestionListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Normal);
         question = questionList.remove(0);
         buttons = new JButton[5];
         choices = new JTextPane[5];
         setMinimumSize(new Dimension(400, 400));
         setPreferredSize(new Dimension(600, 600));
-        topBar = new TopMenu(frame, this, dbReader);
+        topBar = new TopMenu(frame, this);
         init();
         frame.addComponentListener(new ComponentAdapter() {
             @Override
@@ -93,7 +90,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         buttons[2] = new JButton("C");
         buttons[3] = new JButton("D");
         buttons[4] = new JButton("E");
-        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer - topBar.getHeight();
+        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer - TopMenu.getHeight();
         int answerBoxSize = (int)((remainingSpace * ANSWER_BUTTON_SPACE_TAKEN) / 5);
         int yObjectBuffer = (remainingSpace - (answerBoxSize * 5)) / 6;
         buttons[0].setBounds(xWindowBuffer, questionPane.getY() + questionPane.getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
@@ -171,7 +168,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         int yWindowBuffer = (int) (WINDOW_BUFFER * height);
         questionPane.setLocation(xWindowBuffer / 2, yWindowBuffer / 2);
         questionPane.setSize(width - (int) (xWindowBuffer * 1.5), (int) (height * V_QUESTION_PERCENT_SIZE));
-        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer - topBar.getHeight();
+        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer - TopMenu.getHeight();
         int answerBoxSize = (int) ((remainingSpace * ANSWER_BUTTON_SPACE_TAKEN) / 5);
         int yObjectBuffer = (remainingSpace - (answerBoxSize * 5)) / 6;
         buttons[0].setBounds(xWindowBuffer, questionPane.getY() + questionPane.getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
