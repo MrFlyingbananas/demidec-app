@@ -6,6 +6,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 /**
  * Created by mrfly on 7/18/2016.
@@ -68,8 +69,89 @@ public class TopMenu {
             }
         });
         subMenu.add(item);
+        subMenu = new JMenu("By Test");
+        baseMenu.add(subMenu);
 
+        JMenu testsMenu = new JMenu(reader.getSubjectString(DBReader.Subject.Art) + " Tests");
+        List<Test> tests = reader.getTestListBySubject(DBReader.Subject.Art, DBReader.ListOrder.Random);
+        for(Test t : tests){
+            item = new JMenuItem(t.getSubtitle());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    questionPane.changeQuestionSet(t.getQuestions());
+                }
+            });
+            testsMenu.add(item);
+        }
+        subMenu.add(testsMenu);
 
+        testsMenu = new JMenu(reader.getSubjectString(DBReader.Subject.Music) + " Tests");
+        tests = reader.getTestListBySubject(DBReader.Subject.Music, DBReader.ListOrder.Random);
+        for(Test t : tests){
+            item = new JMenuItem(t.getSubtitle());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    questionPane.changeQuestionSet(t.getQuestions());
+                }
+            });
+            testsMenu.add(item);
+        }
+        subMenu.add(testsMenu);
+
+        testsMenu = new JMenu(reader.getSubjectString(DBReader.Subject.LangLit) + " Tests");
+        tests = reader.getTestListBySubject(DBReader.Subject.LangLit, DBReader.ListOrder.Random);
+        for(Test t : tests){
+            item = new JMenuItem(t.getSubtitle());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    questionPane.changeQuestionSet(t.getQuestions());
+                }
+            });
+            testsMenu.add(item);
+        }
+        subMenu.add(testsMenu);
+        testsMenu = new JMenu(reader.getSubjectString(DBReader.Subject.Science) + " Tests");
+        tests = reader.getTestListBySubject(DBReader.Subject.Science, DBReader.ListOrder.Random);
+        for(Test t : tests){
+            item = new JMenuItem(t.getSubtitle());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    questionPane.changeQuestionSet(t.getQuestions());
+                }
+            });
+            testsMenu.add(item);
+        }
+        subMenu.add(testsMenu);
+        testsMenu = new JMenu(reader.getSubjectString(DBReader.Subject.SocialSci) + " Tests");
+        tests = reader.getTestListBySubject(DBReader.Subject.SocialSci, DBReader.ListOrder.Random);
+        for(Test t : tests){
+            item = new JMenuItem(t.getSubtitle());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    questionPane.changeQuestionSet(t.getQuestions());
+                }
+            });
+            testsMenu.add(item);
+        }
+        subMenu.add(testsMenu);
+        testsMenu = new JMenu(reader.getSubjectString(DBReader.Subject.Econ) + " Tests");
+        tests = reader.getTestListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Random);
+        for(Test t : tests){
+            item = new JMenuItem(t.getSubtitle());
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    questionPane.changeQuestionSet(t.getQuestions());
+                }
+            });
+            testsMenu.add(item);
+        }
+        subMenu.add(testsMenu);
         frame.setJMenuBar(topBar);
     }
     public int getHeight(){
