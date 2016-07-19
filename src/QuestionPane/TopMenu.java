@@ -17,11 +17,21 @@ public class TopMenu {
     public TopMenu(JFrame frame, QuestionPane pane, DBReader reader){
         topBar = new JMenuBar();
         this.questionPane = pane;
-        JMenu baseMenu = new JMenu("Change Questions");
+        JMenu baseMenu = new JMenu("File");
+        topBar.add(baseMenu);
+        JMenuItem item = new JMenuItem("Exit");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        baseMenu.add(item);
+        baseMenu = new JMenu("Change Questions");
         topBar.add(baseMenu);
         JMenu subMenu = new JMenu("By Subject");
         baseMenu.add(subMenu);
-        JMenuItem item = new JMenuItem(reader.getSubjectString(DBReader.Subject.Art));
+        item = new JMenuItem(reader.getSubjectString(DBReader.Subject.Art));
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

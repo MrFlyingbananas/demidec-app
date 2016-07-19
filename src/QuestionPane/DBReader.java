@@ -181,9 +181,11 @@ public class DBReader {
                 }
                 questionSets.add(questions);
             }
+            System.out.println("TOTAL STUFF: " + questionSets.size());
             for(int i = 0; i < questionSets.size(); i++){
-                tests.add(new Test(subject, testIDs.remove(0), testNames.remove(0), subtitles.remove(0), questionSets.remove(0)));
+                tests.add(new Test(subject, testIDs.get(i), testNames.get(i), subtitles.get(i), questionSets.get(i)));
             }
+            System.out.println(subject + ": " + tests.size());
         }catch (SQLException e) {
             e.printStackTrace();
         }
