@@ -1,5 +1,6 @@
 package QuestionPane;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
@@ -10,6 +11,7 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.Utilities;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -30,6 +32,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         Incorrect
     }
     private final float V_QUESTION_PERCENT_SIZE = .25f, WINDOW_BUFFER = .06f, ANSWER_BUTTON_SPACE_TAKEN = .8f, X_OBJECT_BUFFER = .05f, NEXT_BUTTON_WIDTH = .2f, NEXT_BUTTON_HEIGHT = .1f;
+    private TopMenu topBar;
     private JFrame frame;
     private JButton[] buttons;
     //private JButton nextButton;
@@ -47,12 +50,13 @@ public class QuestionPane extends JPanel implements ActionListener {
         this.setLayout(null);
         width = (int)frame.getPreferredSize().getWidth();
         height = (int)frame.getPreferredSize().getHeight();
-        questionList = dbReader.getQuestionListBySubject(DBReader.Subject.Econ);
+        questionList = dbReader.getQuestionListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Normal);
         question = questionList.remove(0);
         buttons = new JButton[5];
         choices = new JTextPane[5];
         setMinimumSize(new Dimension(400, 400));
         setPreferredSize(new Dimension(600, 600));
+        topBar = new TopMenu(frame, this, dbReader);
         init();
         frame.addComponentListener(new ComponentAdapter() {
             @Override
@@ -74,7 +78,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         int xWindowBuffer = (int)(WINDOW_BUFFER * width);
         int yWindowBuffer = (int)(WINDOW_BUFFER * height);
         questionPane = new JTextPane();
-        questionPane.setLocation(xWindowBuffer / 2, yWindowBuffer / 2);
+        questionPane.setLocation(xWindowBuffer, yWindowBuffer / 2);
         questionPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
         questionPane.setSize(width - (int)(xWindowBuffer * 1.5), (int)(height * V_QUESTION_PERCENT_SIZE));
         questionPane.setEditable(false);
@@ -84,16 +88,18 @@ public class QuestionPane extends JPanel implements ActionListener {
         questionPane.setMargin(new Insets(10,10,10,10));
         resizeQuestion();
         buttons[0] = new JButton("A");
+        buttons[0].setFocusPainted(false);
         buttons[1] = new JButton("B");
         buttons[2] = new JButton("C");
         buttons[3] = new JButton("D");
         buttons[4] = new JButton("E");
-        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer;
+        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer - topBar.getHeight();
         int answerBoxSize = (int)((remainingSpace * ANSWER_BUTTON_SPACE_TAKEN) / 5);
         int yObjectBuffer = (remainingSpace - (answerBoxSize * 5)) / 6;
         buttons[0].setBounds(xWindowBuffer, questionPane.getY() + questionPane.getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
         for(int i = 1; i < buttons.length; i++){
             buttons[i].setBounds(xWindowBuffer, buttons[i - 1].getY() + buttons[i - 1].getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
+            buttons[i].setFocusPainted(false);
         }
         for(JButton b : buttons){
             b.addActionListener(this);
@@ -108,6 +114,9 @@ public class QuestionPane extends JPanel implements ActionListener {
             choices[i].setText(qChoices[i]);
             choices[i].setHighlighter(null);
             choices[i].setEditable(false);
+            choices[i].setOpaque(false);
+            choices[i].setBorder(BorderFactory.createEmptyBorder());
+            choices[i].setBackground(new Color(0,0,0,0));
         }
         resizeChoices();
         for(int i = 0; i < buttons.length; i++){
@@ -132,6 +141,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         }
         choices[question.getCorrectAnswerIndex()].setText("<font color=\"#008000\">" + question.getChoices()[question.getCorrectAnswerIndex()] + " </font>");
         resizeQuestion();
+        resizeChoices();
         //resizeNextButton();
         //this.add(nextButton);
     }
@@ -161,7 +171,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         int yWindowBuffer = (int) (WINDOW_BUFFER * height);
         questionPane.setLocation(xWindowBuffer / 2, yWindowBuffer / 2);
         questionPane.setSize(width - (int) (xWindowBuffer * 1.5), (int) (height * V_QUESTION_PERCENT_SIZE));
-        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer;
+        int remainingSpace = height - questionPane.getY() - questionPane.getHeight() - yWindowBuffer - topBar.getHeight();
         int answerBoxSize = (int) ((remainingSpace * ANSWER_BUTTON_SPACE_TAKEN) / 5);
         int yObjectBuffer = (remainingSpace - (answerBoxSize * 5)) / 6;
         buttons[0].setBounds(xWindowBuffer, questionPane.getY() + questionPane.getHeight() + yObjectBuffer, answerBoxSize, answerBoxSize);
@@ -233,12 +243,6 @@ public class QuestionPane extends JPanel implements ActionListener {
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
     }
     private void resizeChoices(){
-        String[] qChoices = question.getChoices();
-        for(int i = 0; i < qChoices.length; i++){
-            choices[i].setContentType("text/html");
-            choices[i].setText(qChoices[i]);
-
-        }
         int lStringWidth = 0;
         cFont = new Font("Times New Roman", Font.PLAIN, 50);
         JTextPane testPane = new JTextPane();
@@ -361,7 +365,19 @@ public class QuestionPane extends JPanel implements ActionListener {
 
 
     }
-
+    public void changeQuestionSet(List<Question> questionList){
+        this.questionList.clear();
+        this.questionList.addAll(questionList);
+        question = this.questionList.remove(0);
+        questionPane.setText(question.getText());
+        String[] qChoices = question.getChoices();
+        for(int i = 0; i < choices.length; i++){
+            choices[i].setText(qChoices[i]);
+        }
+        resizeQuestion();
+        resizeChoices();
+        questionAnswered = false;
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
         if(!questionAnswered){
