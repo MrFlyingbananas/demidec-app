@@ -35,6 +35,8 @@ public class Test {
         this.subtitle = subtitle;
         this.questions = questions;
         this.testNumber = testNumber;
+        if(subtitle.length() == 0)
+            this.subtitle = DBReader.getSubjectString(subject) + " Test " + testNumber;
     }
     public List<Question> getQuestions(){
         return questions;

@@ -7,7 +7,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by cisom on 6/23/16.
@@ -72,18 +71,15 @@ public class DBReader {
     }
     private Connection con;
     private String[] tableNames, dataNames;
-    private Statement stmnt;
-    private Random random;
-    public DBReader(Connection con){
-        this.con = con;
+    private static Statement stmnt;
+    public static void setConnection(Connection con){
         try {
             stmnt = con.createStatement();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        random = new Random();
     }
-    private ResultSet getData(SelectionID selection, TableID table, String filter){
+    private static ResultSet getData(SelectionID selection, TableID table, String filter){
         try {
             return stmnt.executeQuery("SELECT " + selection.getSelectionID() + " FROM " + table.getTableID() + " " + filter);
         } catch (SQLException e) {
@@ -91,7 +87,7 @@ public class DBReader {
         }
         return null;
     }
-    private ResultSet getData(SelectionID[] selections, TableID table, String filter){
+    private static ResultSet getData(SelectionID[] selections, TableID table, String filter){
         try {
             String selection = "";
             for(int i = 0; i < selections.length; i++){
@@ -107,7 +103,7 @@ public class DBReader {
         return null;
 
     }
-    private ResultSet getData(SelectionID selection, TableID[] tables, String filter){
+    private static ResultSet getData(SelectionID selection, TableID[] tables, String filter){
         try {
             String table = "";
             for(int i = 0; i < tables.length; i++){
@@ -123,7 +119,7 @@ public class DBReader {
         return null;
 
     }
-    public List<Question> getQuestionListBySubject(Subject subject, ListOrder order){
+    public static List<Question> getQuestionListBySubject(Subject subject, ListOrder order){
         ResultSet rs = getData(SelectionID.All, TableID.Questions, "WHERE SubjectID=" + subject.subjectID);
         List<Question> questions = new ArrayList<>();
         try {
@@ -143,7 +139,7 @@ public class DBReader {
         return questions;
     }
 
-    public String getSubjectString(Subject subject){
+    public static String getSubjectString(Subject subject){
         try {
             return getData(SelectionID.SubjectLong, TableID.Subjets, "WHERE " + SelectionID.SubjectID.getSelectionID() + "=" + subject.getSubjectID()).getString(SelectionID.SubjectLong.getSelectionID());
         } catch (SQLException e) {
@@ -152,7 +148,7 @@ public class DBReader {
         return null;
     }
 
-    public List<Test> getTestListBySubject(Subject subject, ListOrder questionOrder){
+    public static List<Test> getTestListBySubject(Subject subject, ListOrder questionOrder){
         List<Test> tests = new ArrayList<Test>();
         int testSetID = 0;
         try {

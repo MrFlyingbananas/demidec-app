@@ -28,10 +28,11 @@ public class QuestionPanelMain {
         Connection con = null;
         try {
             con = DriverManager.getConnection("jdbc:sqlite:sample.db");
+            DBReader.setConnection(con);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        frame.add(new QuestionPane(frame, con));
+        frame.add(new QuestionPane(frame));
         frame.pack();
         frame.setLocationRelativeTo(null);
         if(!frame.isVisible())
