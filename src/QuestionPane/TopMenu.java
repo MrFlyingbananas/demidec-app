@@ -13,10 +13,10 @@ import java.util.List;
  */
 public class TopMenu {
     private static JMenuBar topBar;
-    private QuestionPane questionPane;
-    public TopMenu(JFrame frame, QuestionPane pane){
+    private Main main;
+    public TopMenu(JFrame frame, Main main){
         topBar = new JMenuBar();
-        this.questionPane = pane;
+        this.main = main;
         JMenu baseMenu = new JMenu("File");
         topBar.add(baseMenu);
         JMenuItem item = new JMenuItem("Exit");
@@ -35,7 +35,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                questionPane.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Art, DBReader.ListOrder.Random));
+                main.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Art, DBReader.ListOrder.Random));
             }
         });
         subMenu.add(item);
@@ -43,7 +43,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                questionPane.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Music, DBReader.ListOrder.Random));
+                main.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Music, DBReader.ListOrder.Random));
             }
         });
         subMenu.add(item);
@@ -51,7 +51,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                questionPane.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.LangLit, DBReader.ListOrder.Random));
+                main.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.LangLit, DBReader.ListOrder.Random));
             }
         });
         subMenu.add(item);
@@ -59,7 +59,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                questionPane.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Science, DBReader.ListOrder.Random));
+                main.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Science, DBReader.ListOrder.Random));
             }
         });
         subMenu.add(item);
@@ -67,7 +67,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                questionPane.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.SocialSci, DBReader.ListOrder.Random));
+                main.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.SocialSci, DBReader.ListOrder.Random));
             }
         });
         subMenu.add(item);
@@ -75,7 +75,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                questionPane.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Random));
+                main.changeQuestionSet(DBReader.getQuestionListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Random));
             }
         });
         subMenu.add(item);
@@ -89,7 +89,7 @@ public class TopMenu {
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    questionPane.changeQuestionSet(t.getQuestions());
+                    main.changeQuestionSet(t.getQuestions());
                 }
             });
             testsMenu.add(item);
@@ -103,7 +103,7 @@ public class TopMenu {
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    questionPane.changeQuestionSet(t.getQuestions());
+                    main.changeQuestionSet(t.getQuestions());
                 }
             });
             testsMenu.add(item);
@@ -117,7 +117,7 @@ public class TopMenu {
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    questionPane.changeQuestionSet(t.getQuestions());
+                    main.changeQuestionSet(t.getQuestions());
                 }
             });
             testsMenu.add(item);
@@ -130,7 +130,7 @@ public class TopMenu {
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    questionPane.changeQuestionSet(t.getQuestions());
+                    main.changeQuestionSet(t.getQuestions());
                 }
             });
             testsMenu.add(item);
@@ -143,7 +143,7 @@ public class TopMenu {
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    questionPane.changeQuestionSet(t.getQuestions());
+                    main.changeQuestionSet(t.getQuestions());
                 }
             });
             testsMenu.add(item);
@@ -156,7 +156,7 @@ public class TopMenu {
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    questionPane.changeQuestionSet(t.getQuestions());
+                    main.changeQuestionSet(t.getQuestions());
                 }
             });
             testsMenu.add(item);

@@ -31,7 +31,6 @@ public class QuestionPane extends JPanel implements ActionListener {
         Incorrect
     }
     private final float V_QUESTION_PERCENT_SIZE = .25f, WINDOW_BUFFER = .06f, ANSWER_BUTTON_SPACE_TAKEN = .8f, X_OBJECT_BUFFER = .05f, NEXT_BUTTON_WIDTH = .2f, NEXT_BUTTON_HEIGHT = .1f;
-    private TopMenu topBar;
     private JFrame frame;
     private JButton[] buttons;
     //private JButton nextButton;
@@ -53,7 +52,6 @@ public class QuestionPane extends JPanel implements ActionListener {
         choices = new JTextPane[5];
         setMinimumSize(new Dimension(400, 400));
         setPreferredSize(new Dimension(600, 600));
-        topBar = new TopMenu(frame, this);
         init();
         frame.addComponentListener(new ComponentAdapter() {
             @Override
