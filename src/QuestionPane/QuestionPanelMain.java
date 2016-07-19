@@ -12,7 +12,7 @@ import java.util.Arrays;
 /**
  * Created by 120658 on 3/15/2016.
  */
-public class QuestionPanelMain {
+/*public class QuestionPanelMain {
     public QuestionPanelMain(){
         try {
             // Set cross-platform Java L&F (also called "Metal")
@@ -40,4 +40,4 @@ public class QuestionPanelMain {
     public static void main(String[] args){
         new QuestionPanelMain();
     }
-}
+}*/
