@@ -48,7 +48,7 @@ public class TopMenu {
         baseMenu.add(item);
         //TODO: A WAY TO SHOW TOP BAR STUFF ONLY IF INSTALLED
         Subject[] focusQuizSubjects = DBReader.getFocusQuizSubjects();
-        if(focusQuizSubjects.length != 0){
+        if(focusQuizSubjects != null && focusQuizSubjects.length != 0){
             JMenu subMenu = new JMenu("By Subject");
             baseMenu = new JMenu("Focus Quizzes");
             topBar.add(baseMenu);

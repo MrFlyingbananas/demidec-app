@@ -1,6 +1,7 @@
 package QuestionPane;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -98,25 +99,36 @@ public class DBReader {
             e.printStackTrace();
         }
         try {
-            ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " + SelectionID.ResourceTypeID + "=" + ResourceTypeID.FocusQuiz);
-            List<Integer> list = new ArrayList<>();
-            while(rs.next()){
-                list.add(rs.getInt(SelectionID.SubjectID.toString()));
+            DatabaseMetaData meta = con.getMetaData();
+            ResultSet test = meta.getTables(null, null, TableID.TestSets.toString(), new String[] {"TABLE"});
+            boolean hasTable = false;
+            while(test.next()){
+                if(test.getString("TABLE_NAME").equals(TableID.TestSets))
+                    hasTable = true;
             }
-            focusQuizSubjects = new Subject[list.size() - 1];
-            int count = 0;
-            for(int j = 0; j < Subject.values().length; j++){
-                Subject sub = Subject.values()[j];
-                for(int i = 0; i < list.size(); i++){
-                    if(sub.getSubjectID() == list.get(i)){
-                        list.remove(i);
-                        focusQuizSubjects[count++] = sub;
-                        break;
+            if(hasTable){
+                ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " + SelectionID.ResourceTypeID + "=" + ResourceTypeID.FocusQuiz);
+                List<Integer> list = new ArrayList<>();
+                while(rs.next()){
+                    list.add(rs.getInt(SelectionID.SubjectID.toString()));
+                }
+                focusQuizSubjects = new Subject[list.size() - 1];
+                int count = 0;
+                for(int j = 0; j < Subject.values().length; j++){
+                    Subject sub = Subject.values()[j];
+                    for(int i = 0; i < list.size(); i++){
+                        if(sub.getSubjectID() == list.get(i)){
+                            list.remove(i);
+                            focusQuizSubjects[count++] = sub;
+                            break;
+                        }
                     }
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
+            return;
         }
     }
     private static ResultSet getData(SelectionID selection, TableID table, String filter){
