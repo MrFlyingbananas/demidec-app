@@ -37,17 +37,7 @@ public class TopMenu {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setMultiSelectionEnabled(true);
-                FileNameExtensionFilter filter = new FileNameExtensionFilter("Bin Files", "bin");
-                fileChooser.setFileFilter(filter);
-                int result = fileChooser.showOpenDialog(frame);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    System.out.println("File selected!");
-                    DBCreator.addFilesToDatabase(fileChooser.getSelectedFiles());
-                    DBReader.updateCache();
-                    updateMenu();
-                }
+                main.addFiles();
             }
         });
         baseMenu.add(item);
@@ -99,7 +89,7 @@ public class TopMenu {
     public static int getHeight(){
         return topBar.getHeight();
     }
-    private void updateMenu(){
+    public void updateMenu(){
         JMenuItem item;
         Subject[] subjects = DBReader.getFocusQuizSubjects();
         if(subjects != null && subjects.length != 0){

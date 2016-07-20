@@ -1,14 +1,17 @@
 package GUI;
 
+import Database.DBCreator.DBCreator;
 import GUI.QuestionPane.Question;
 import GUI.QuestionPane.QuestionPane;
 import GUI.MainMenu.*;
 import Database.DBReader;
 import GUI.QuestionPane.TopMenu;
 
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.Dimension;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -22,6 +25,7 @@ public class Main {
     private JFrame frame;
     private QuestionPane questionPane;
     private MainMenu mainMenu;
+    private TopMenu topBar;
     public Main(){
         try {
             DBReader.setConnection(DriverManager.getConnection("jdbc:sqlite:database.db"));
@@ -30,7 +34,7 @@ public class Main {
             e.printStackTrace();
         }
         frame = new JFrame();
-        new TopMenu(frame, this);
+        topBar = new TopMenu(frame, this);
         frame.setPreferredSize(new Dimension(600, 600));
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -59,5 +63,18 @@ public class Main {
         frame.add(questionPane);
         frame.revalidate();
         frame.repaint();
+    }
+    public void addFiles(){
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setMultiSelectionEnabled(true);
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Bin Files", "bin");
+        fileChooser.setFileFilter(filter);
+        int result = fileChooser.showOpenDialog(frame);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            System.out.println("File selected!");
+            DBCreator.addFilesToDatabase(fileChooser.getSelectedFiles());
+            DBReader.updateCache();
+            topBar.updateMenu();
+        }
     }
 }
