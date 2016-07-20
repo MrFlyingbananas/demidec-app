@@ -15,7 +15,7 @@ public class MainMenu extends JPanel implements ActionListener{
     private JFrame frame;
     private JButton[] buttons;
     private JLabel intro_message;
-    private Font font;
+    protected static Font font;
     private Main main;
     private SubjectScreen subScreen;
 

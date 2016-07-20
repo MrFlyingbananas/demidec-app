@@ -16,7 +16,6 @@ public class SubjectScreen extends JPanel implements ActionListener {
     private JLabel subjectMessage;
     private JButton[] subjectButtons;
     private JButton back;
-    private Font font;
     private int material;
     private Main main;
     private MainMenu menu;
@@ -33,9 +32,8 @@ public class SubjectScreen extends JPanel implements ActionListener {
         setPreferredSize(new Dimension(600, 600));
 
 
-        font = new Font("Times New Roman", Font.PLAIN, 24);
         subjectMessage =  new JLabel("Select a subject to study: ");
-        subjectMessage.setFont(font);
+        subjectMessage.setFont(MainMenu.font);
         subjectButtons = new JButton[6];
         subjectButtons[0] = new JButton("Art");
         subjectButtons[1] = new JButton("Music");
