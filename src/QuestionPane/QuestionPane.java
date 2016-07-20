@@ -21,6 +21,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
 import java.util.List;
 /**
  * Created by 120658 on 3/15/2016.
@@ -50,6 +51,7 @@ public class QuestionPane extends JPanel implements ActionListener {
         choices = new JTextPane[5];
         setMinimumSize(new Dimension(400, 400));
         setPreferredSize(new Dimension(600, 600));
+        questionList = new ArrayList<>();
         init();
         frame.addComponentListener(new ComponentAdapter() {
             @Override
