@@ -1,16 +1,13 @@
 package GUI.QuestionPane;
 
-import Database.DBCreator.DBCreator;
-import Database.DBReader;
+import Database.DBAccess;
 import GUI.Main;
-import Database.DBReader.Subject;
+import Database.DBAccess.Subject;
 
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,7 +22,7 @@ public class TopMenu {
     private static JMenuBar topBar;
     private JFrame frame;
     private Main main;
-    private JMenu focusQuizMenu, levelExamMenu, compExamMenu, flashcardMenu;
+    private JMenu focusQuizMenu, levelExamMenu, compExamMenu, flashcardMenu, subMenu;
     public TopMenu(JFrame frame, Main main){
         JMenuItem item;
         topBar = new JMenuBar();
@@ -49,18 +46,18 @@ public class TopMenu {
             }
         });
         baseMenu.add(item);
-        /*Subject[] focusQuizSubjects = DBReader.getFocusQuizSubjects();
+        /*Subject[] focusQuizSubjects = DBAccess.getFocusQuizSubjects();
         if(focusQuizSubjects != null && focusQuizSubjects.length != 0){
             JMenu subMenu = new JMenu("By Subject");
             baseMenu = new JMenu("Focus Quizzes");
             topBar.add(baseMenu);
             baseMenu.add(subMenu);
             for (Subject sub : focusQuizSubjects) {
-                item = new JMenuItem(DBReader.getSubjectString(sub));
+                item = new JMenuItem(DBAccess.getSubjectString(sub));
                 item.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        main.changeQuestionSet(DBReader.getQuestionListBySubject(sub, DBReader.ListOrder.Random));
+                        main.changeQuestionSet(DBAccess.getQuestionListBySubject(sub, DBAccess.ListOrder.Random));
                     }
                 });
             }
@@ -68,8 +65,8 @@ public class TopMenu {
             subMenu = new JMenu("By Quiz");
             baseMenu.add(subMenu);
             for (Subject sub : focusQuizSubjects) {
-                JMenu testsMenu = new JMenu(DBReader.getSubjectString(sub) + " Quizzes");
-                List<Test> tests = DBReader.getTestListBySubject(sub, DBReader.ListOrder.Random);
+                JMenu testsMenu = new JMenu(DBAccess.getSubjectString(sub) + " Quizzes");
+                List<Test> tests = DBAccess.getTestListBySubject(sub, DBAccess.ListOrder.Random);
                 for (Test t : tests) {
                     item = new JMenuItem(t.getSubtitle());
                     item.addActionListener(new ActionListener() {
@@ -91,32 +88,30 @@ public class TopMenu {
     }
     public void updateMenu(){
         JMenuItem item;
-        Subject[] subjects = DBReader.getFocusQuizSubjects();
+        Subject[] subjects = DBAccess.getFocusQuizSubjects();
         if(subjects != null && subjects.length != 0){
             List<Subject> updateSubjects = new ArrayList<>(Arrays.asList(subjects));
-            JMenu subMenu = null;
+            subMenu = null;
             if(focusQuizMenu == null){
                 focusQuizMenu = new JMenu("Focus Quizzes");
                 topBar.add(focusQuizMenu);
                 subMenu = new JMenu("By Subject");
                 focusQuizMenu.add(subMenu);
-                System.out.println("NO EXIST");
             }else{
-                for (Component c : focusQuizMenu.getComponents()) {
-                    if(c.getName().equals("By Subject")) {
-                        subMenu = (JMenu) c;
-                        System.out.println("EXISTERINO");
-                        return;
+                for (Component c : focusQuizMenu.getMenuComponents()) {
+                    JMenu menu = (JMenu) c;
+                    if(menu.getText().equals("By Subject")) {
+                        subMenu = menu;
+                        break;
                     }
                 }
                 List<String> names = new ArrayList<>();
-                for(Component c : subMenu.getComponents()){
-                    System.out.println(names);
-                    names.add(c.getName());
+                for(int i = 0; i < subMenu.getItemCount(); i++){
+                    names.add(subMenu.getItem(i).getText());
                 }
                 for(Subject s : subjects){
                     for(int i = 0; i < names.size(); i++){
-                        if(s.toString().equals(names.get(i))){
+                        if(DBAccess.getSubjectString(s).equals(names.get(i))){
                             names.remove(i);
                             updateSubjects.remove(s);
                             break;
@@ -125,20 +120,44 @@ public class TopMenu {
                 }
             }
             for (Subject sub : updateSubjects) {
-                item = new JMenuItem(DBReader.getSubjectString(sub));
+                item = new JMenuItem(DBAccess.getSubjectString(sub));
                 item.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        main.changeQuestionSet(DBReader.getQuestionListBySubject(sub, DBReader.ListOrder.Random));
+                        main.changeQuestionSet(DBAccess.getQuestionListBySubject(sub, DBAccess.ListOrder.Random));
                     }
                 });
                 subMenu.add(item);
             }
-            subMenu = new JMenu("By Quiz");
-            focusQuizMenu.add(subMenu);
-            for (Subject sub : subjects) {
-                JMenu testsMenu = new JMenu(DBReader.getSubjectString(sub) + " Quizzes");
-                List<Test> tests = DBReader.getTestListBySubject(sub, DBReader.ListOrder.Random);
+            boolean exists = false;
+            for (Component c : focusQuizMenu.getMenuComponents()) {
+                JMenu menu = (JMenu) c;
+                if(menu.getText().equals("By Quiz")) {
+                    subMenu = menu;
+                    exists = true;
+                    break;
+                }
+            }
+            if(!exists){
+                subMenu = new JMenu("By Quiz");
+                focusQuizMenu.add(subMenu);
+            }
+            List<TestSet> updateSets = DBAccess.getTestSetListByResourceTypeID(DBAccess.ResourceTypeID.FocusQuiz);
+            List<String> names = new ArrayList<>();
+            for(int i = 0; i < subMenu.getItemCount(); i++){
+                names.add(subMenu.getItem(i).getText());
+            }
+            for(String name : names){
+                for(int i = 0; i < updateSets.size(); i++){
+                    if(updateSets.get(i).getSetName().equals(name)){
+                        updateSets.remove(i);
+                        i--;
+                    }
+                }
+            }
+            for(TestSet set : updateSets){
+                JMenu testsMenu = new JMenu(DBAccess.getSubjectString(set.getSubject()) + " " + set.getSetName());
+                List<Test> tests = DBAccess.getTestListByTestSet(set, DBAccess.ListOrder.Random);
                 for (Test t : tests) {
                     item = new JMenuItem(t.getSubtitle());
                     item.addActionListener(new ActionListener() {
@@ -151,8 +170,22 @@ public class TopMenu {
                 }
                 subMenu.add(testsMenu);
             }
+            /*for (Subject sub : updateSubjects) {
+                JMenu testsMenu = new JMenu(DBAccess.getSubjectString(sub) + " Quizzes");
+                List<Test> tests = DBAccess.getTestListBySubject(sub, DBAccess.ListOrder.Random);
+                for (Test t : tests) {
+                    item = new JMenuItem(t.getSubtitle());
+                    item.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            main.changeQuestionSet(t.getQuestions());
+                        }
+                    });
+                    testsMenu.add(item);
+                }
+                subMenu.add(testsMenu);
+            }*/
         }
-        System.out.println("UPDATED");
         frame.setJMenuBar(topBar);
     }
 }

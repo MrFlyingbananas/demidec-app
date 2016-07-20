@@ -1,4 +1,4 @@
-package Database.DBCreator;
+package Database;
 
 import java.util.ArrayList;
 import java.util.List;

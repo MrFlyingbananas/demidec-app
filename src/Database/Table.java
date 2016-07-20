@@ -1,4 +1,4 @@
-package Database.DBCreator;
+package Database;
 
 import java.sql.SQLException;
 import java.sql.Statement;

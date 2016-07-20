@@ -1,7 +1,7 @@
 package GUI.QuestionPane;
 
-import Database.DBReader;
-import Database.DBReader.Subject;
+import Database.DBAccess;
+import Database.DBAccess.Subject;
 
 import java.util.List;
 /**
@@ -37,7 +37,7 @@ public class Test {
         this.questions = questions;
         this.testNumber = testNumber;
         if(subtitle.length() == 0)
-            this.subtitle = DBReader.getSubjectString(subject) + " Test " + testNumber;
+            this.subtitle = DBAccess.getSubjectString(subject) + " Quiz " + testNumber;
     }
     public List<Question> getQuestions(){
         return questions;

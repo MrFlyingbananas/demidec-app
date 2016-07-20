@@ -1,5 +1,8 @@
-package Database.DBCreator;
+package Database;
 
+import GUI.QuestionPane.Question;
+import GUI.QuestionPane.Test;
+import GUI.QuestionPane.TestSet;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -18,16 +21,318 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
-public class DBCreator {
+/**
+ * Created by cisom on 6/23/16.
+ */
+public class DBAccess {
+    public enum ListOrder{
+        Random,
+        Normal,
+        Inverse;
+    }
+    private enum SelectionID {
+        All("*"),
+        SubjectLong("SubjectLong"),
+        SubjectID("SubjectID"),
+        TestSetID("TestSetID"),
+        TestID("TestID"),
+        TestName("TestName"),
+        Subtitle("Subtitle"),
+        ResourceTypeID("ResourceTypeID"),
+        SetName("SetName");
 
+        final String id;
+        SelectionID(String id){
+            this.id = id;
+        }
+        @Override
+        public String toString() {
+            return this.id;
+        }
+    }
+    private enum TableID{
+        CardTypes("CardTypes"),
+        Outlines("Outlines"),
+        OutlinesAndQuestions("OutlinesAndQuestions"),
+        Questions("Questions"),
+        ResourceTypes("ResourceTypes"),
+        Subjets("Subjects"),
+        TestSets("TestSets"),
+        Tests("Tests"),
+        TestAndQuestions("TestAndQuestions");
+
+        final String id;
+        TableID(String id){
+            this.id = id;
+        }
+        @Override
+        public String toString() {
+            return this.id;
+        }
+    }
+    public enum Subject{
+        Art(41),
+        Econ(42),
+        LangLit(43),
+        Music(44),
+        Science(45),
+        SocialSci(47);
+        final int subjectID;
+
+        Subject(int subjectID){
+            this.subjectID = subjectID;
+        }
+        public String toString() {
+            return Integer.toString(subjectID);
+        }
+        int getSubjectID() {
+            return subjectID;
+        }
+    }
+    public enum ResourceTypeID{
+        FocusQuiz(368),
+        ComprehensiveExam(371);
+
+        final int id;
+        ResourceTypeID(int id){
+            this.id = id;
+        }
+        @Override
+        public String toString() {
+            return Integer.toString(id);
+        }
+    }
+    private static Connection con;
+    private static Subject[] focusQuizSubjects, levelExamSubjects, sectionExamSubjects, comprehensiveExamSubjects, flashcardSubjects;
+    private static Statement stmnt;
+    public static void setConnection(Connection con1){
+        try {
+            stmnt = con1.createStatement();
+            con = con1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        updateCache();
+    }
+    private static ResultSet getData(SelectionID selection, TableID table, String filter){
+        try {
+            return stmnt.executeQuery("SELECT " + selection+ " FROM " + table + " " + filter);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    private static ResultSet getData(SelectionID[] selections, TableID table, String filter){
+        try {
+            String selection = "";
+            for(int i = 0; i < selections.length; i++){
+                selection += selections[i];
+                if(i +
+                        1 != selections.length){
+                    selection += " AND ";
+                }
+            }
+            return stmnt.executeQuery("SELECT " + selection + " FROM " + table + " " + filter);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+    private static ResultSet getData(SelectionID selection, TableID[] tables, String filter){
+        try {
+            String table = "";
+            for(int i = 0; i < tables.length; i++){
+                table += tables[i];
+                if(i + 1 != tables.length){
+                    table += " AND ";
+                }
+            }
+            return stmnt.executeQuery("SELECT " + selection + " FROM " + table + " " + filter);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+    public static List<Question> getQuestionListBySubject(Subject subject, ListOrder order){
+        ResultSet rs = getData(SelectionID.All, TableID.Questions, "WHERE SubjectID=" + subject.subjectID);
+        List<Question> questions = new ArrayList<>();
+        try {
+            while(rs.next()){
+                questions.add(new Question(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        switch(order){
+            case Random:
+                Collections.shuffle(questions);
+                break;
+            case Inverse:
+                Collections.reverse(questions);
+        }
+        return questions;
+    }
+
+    public static String getSubjectString(Subject subject){
+        try {
+            return getData(SelectionID.SubjectLong, TableID.Subjets, "WHERE " + SelectionID.SubjectID + "=" + subject.getSubjectID()).getString(SelectionID.SubjectLong.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public static List<TestSet> getTestSetListByResourceTypeID(ResourceTypeID resourceID){
+        List<TestSet> testSets = new ArrayList<TestSet>();
+        ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " +SelectionID.ResourceTypeID + "=" + resourceID);
+        try {
+            while(rs.next()){
+                int setID = rs.getInt(SelectionID.TestSetID.toString());
+                String setName = rs.getString(SelectionID.SetName.toString());
+                int subID = rs.getInt(SelectionID.SubjectID.toString());
+                Subject sub = null;
+                for(int i = 0; i < Subject.values().length; i++){
+                    if(Subject.values()[i].getSubjectID() == subID){
+                        sub = Subject.values()[i];
+                    }
+                }
+                testSets.add(new TestSet(setID, setName, sub, resourceID));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return testSets;
+    }
+    public static List<Test> getTestListByTestSet(TestSet set, ListOrder questionOrder){
+        List<Test> tests = new ArrayList<Test>();
+        ResultSet testSets = getData(SelectionID.All, TableID.Tests, "WHERE " + SelectionID.TestSetID + "=" + set.getSetID());
+        List<String> subtitles = new ArrayList<String>();
+        List<Integer> testIDs = new ArrayList<Integer>(), testNames = new ArrayList<Integer>();
+        List<List<Question>> questionSets = new ArrayList<>();
+        try {
+            while (testSets.next()) {
+                testIDs.add(testSets.getInt(SelectionID.TestID.toString()));
+                testNames.add(testSets.getInt(SelectionID.TestName.toString()));
+                subtitles.add(testSets.getString(SelectionID.Subtitle.toString()));
+            }
+            for(int testID : testIDs){
+                ResultSet resultSet = getData(SelectionID.All, TableID.Questions, "WHERE " + SelectionID.TestID + "=" + testID);
+                List<Question> questions = new ArrayList<Question>();
+                while(resultSet.next()){
+                    questions.add(new Question(resultSet));
+                }
+                switch(questionOrder){
+                    case Random:
+                        Collections.shuffle(questions);
+                        break;
+                    case Inverse:
+                        Collections.reverse(questions);
+                }
+                questionSets.add(questions);
+            }
+            for(int i = 0; i < questionSets.size(); i++){
+                if(subtitles.get(i).length() == 0){
+                    subtitles.set(i, getSubjectString(set.getSubject()) + " " + set.getSetName() + " " + testNames.get(i));
+                }
+                tests.add(new Test(set.getSubject(), testIDs.get(i), testNames.get(i), subtitles.get(i), questionSets.get(i)));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println(tests.size());
+        return tests;
+    }
+
+    public static List<Test> getTestListBySubject(Subject subject, ListOrder questionOrder){
+        // TODO: 7/20/2016 OUTDATED DO NOT USE
+        List<Test> tests = new ArrayList<Test>();
+        int testSetID = 0;
+        try {
+            testSetID = getData(SelectionID.TestSetID, TableID.TestSets, "WHERE " + SelectionID.SubjectID + "=" + subject.getSubjectID()).getInt(SelectionID.TestSetID.toString());
+            ResultSet testSets = getData(SelectionID.All, TableID.Tests, "WHERE " + SelectionID.TestSetID + "=" + testSetID);
+            List<String> subtitles = new ArrayList<String>();
+            List<Integer> testIDs = new ArrayList<Integer>(), testNames = new ArrayList<Integer>();
+            List<List<Question>> questionSets = new ArrayList<>();
+            while (testSets.next()) {
+                testIDs.add(testSets.getInt(SelectionID.TestID.toString()));
+                testNames.add(testSets.getInt(SelectionID.TestName.toString()));
+                subtitles.add(testSets.getString(SelectionID.Subtitle.toString()));
+            }
+            for(int testID : testIDs){
+                ResultSet resultSet = getData(SelectionID.All, TableID.Questions, "WHERE " + SelectionID.TestID + "=" + testID);
+                List<Question> questions = new ArrayList<Question>();
+                while(resultSet.next()){
+                    questions.add(new Question(resultSet));
+                }
+                switch(questionOrder){
+                    case Random:
+                        Collections.shuffle(questions);
+                        break;
+                    case Inverse:
+                        Collections.reverse(questions);
+                }
+                questionSets.add(questions);
+            }
+            System.out.println("TOTAL STUFF: " + questionSets.size());
+            for(int i = 0; i < questionSets.size(); i++){
+                tests.add(new Test(subject, testIDs.get(i), testNames.get(i), subtitles.get(i), questionSets.get(i)));
+            }
+            System.out.println(subject + ": " + tests.size());
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tests;
+    }
+    public static Subject[] getFocusQuizSubjects(){
+        return focusQuizSubjects;
+    }
+    public static void updateCache(){
+        try {
+            DatabaseMetaData meta = con.getMetaData();
+            ResultSet test = meta.getTables(null, null, TableID.TestSets.toString(), new String[] {"TABLE"});
+            boolean hasTable = false;
+            while(test.next()){
+                if(test.getString("TABLE_NAME").equals(TableID.TestSets.toString()))
+                    hasTable = true;
+            }
+            if(hasTable){
+                ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " + SelectionID.ResourceTypeID + "=" + ResourceTypeID.FocusQuiz);
+                List<Integer> list = new ArrayList<>();
+                while(rs.next()){
+                    list.add(rs.getInt(SelectionID.SubjectID.toString()));
+                }
+                focusQuizSubjects = new Subject[list.size()];
+                if(list.size() == 7){
+                    focusQuizSubjects[6] = Subject.LangLit;
+                }
+                int count = 0;
+                System.out.println(list);
+                for(int j = 0; j < Subject.values().length; j++){
+                    Subject sub = Subject.values()[j];
+                    for(int i = 0; i < list.size(); i++){
+                        if(sub.getSubjectID() == list.get(i)){
+                            list.remove(i);
+                            focusQuizSubjects[count++] = sub;
+                            break;
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
     public static void addFilesToDatabase(File[] files) {
         //File file1 = new File("All Focused Quizzes.bin");
         //File file = new File("temp.xml");
@@ -38,7 +343,6 @@ public class DBCreator {
                 private ArrayList<String> tables = new ArrayList<String>();
                 private Stack<Node> order = new Stack<Node>();
                 private Node root;
-                private Connection connection = null;
                 private boolean first = true;
                 private int valuesQueued = 0;
                 private int maxValueQueue = 1000;
@@ -47,11 +351,8 @@ public class DBCreator {
                 @Override
                 public void startDocument(){
                     try {
-                        System.out.println("Connecting to db...");
-                        connection = DriverManager.getConnection("jdbc:sqlite:database.db");
-                        System.out.println("Connected to db!");
-                        DatabaseMetaData metaData = connection.getMetaData();
-                        stmnt = connection.createStatement();
+                        DatabaseMetaData metaData = con.getMetaData();
+                        stmnt = con.createStatement();
                         ResultSet rs = metaData.getTables(null, null, null, new String[]{"TABLE"});
                         while(rs.next()){
                             tables.add(rs.getString("TABLE_NAME"));
@@ -97,7 +398,7 @@ public class DBCreator {
                             tables.add(qName);
                             try {
                                 System.out.println("CREATING TABLE: " + qName);
-                                connection.createStatement().executeUpdate(sql);
+                                con.createStatement().executeUpdate(sql);
                             } catch (SQLException e) {
                                 e.printStackTrace();
                                 System.out.println(sql);
@@ -290,7 +591,6 @@ public class DBCreator {
                     }
                     try {
                         stmnt.close();
-                        connection.close();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
@@ -318,7 +618,6 @@ public class DBCreator {
                 e.printStackTrace();
                 return;
             }
-
 
             try {
                 File temp = new File("temp.xml");

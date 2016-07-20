@@ -1,10 +1,9 @@
 package GUI;
 
-import Database.DBCreator.DBCreator;
 import GUI.QuestionPane.Question;
 import GUI.QuestionPane.QuestionPane;
 import GUI.MainMenu.*;
-import Database.DBReader;
+import Database.DBAccess;
 import GUI.QuestionPane.TopMenu;
 
 import javax.swing.JFileChooser;
@@ -28,7 +27,7 @@ public class Main {
     private TopMenu topBar;
     public Main(){
         try {
-            DBReader.setConnection(DriverManager.getConnection("jdbc:sqlite:database.db"));
+            DBAccess.setConnection(DriverManager.getConnection("jdbc:sqlite:database.db"));
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -72,8 +71,8 @@ public class Main {
         int result = fileChooser.showOpenDialog(frame);
         if (result == JFileChooser.APPROVE_OPTION) {
             System.out.println("File selected!");
-            DBCreator.addFilesToDatabase(fileChooser.getSelectedFiles());
-            DBReader.updateCache();
+            DBAccess.addFilesToDatabase(fileChooser.getSelectedFiles());
+            DBAccess.updateCache();
             topBar.updateMenu();
         }
     }
