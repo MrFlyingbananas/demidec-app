@@ -1,4 +1,6 @@
-package QuestionPane;
+package GUI.MainMenu;
+
+import GUI.Main;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,6 +1,7 @@
-package QuestionPane;
+package GUI.QuestionPane;
 
-import QuestionPane.DBReader.Subject;
+import Database.DBReader;
+import Database.DBReader.Subject;
 
 import java.util.List;
 /**

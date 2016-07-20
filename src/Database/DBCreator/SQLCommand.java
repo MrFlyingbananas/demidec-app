@@ -1,4 +1,4 @@
-package DBCreator;
+package Database.DBCreator;
 
 /**
  * Created by mrfly on 2/27/2016.

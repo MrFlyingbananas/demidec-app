@@ -1,4 +1,10 @@
-package QuestionPane;
+package GUI;
+
+import GUI.QuestionPane.Question;
+import GUI.QuestionPane.QuestionPane;
+import GUI.MainMenu.*;
+import Database.DBReader;
+import GUI.QuestionPane.TopMenu;
 
 import javax.swing.JFrame;
 import javax.swing.UIManager;

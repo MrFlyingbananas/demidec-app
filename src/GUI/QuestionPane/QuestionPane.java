@@ -1,4 +1,4 @@
-package QuestionPane;
+package GUI.QuestionPane;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

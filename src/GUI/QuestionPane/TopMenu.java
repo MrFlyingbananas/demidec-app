@@ -1,7 +1,9 @@
-package QuestionPane;
+package GUI.QuestionPane;
 
-import QuestionPane.DBReader.Subject;
-import org.sqlite.core.DB;
+import Database.DBCreator.DBCreator;
+import Database.DBReader;
+import GUI.Main;
+import Database.DBReader.Subject;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -33,7 +35,7 @@ public class TopMenu {
                 int result = fileChooser.showOpenDialog(frame);
                 if (result == JFileChooser.APPROVE_OPTION) {
                     System.out.println("File selected!");
-                    DBCreator.DBCreator.addFilesToDatabase(fileChooser.getSelectedFiles());
+                    DBCreator.addFilesToDatabase(fileChooser.getSelectedFiles());
                 }
             }
         });

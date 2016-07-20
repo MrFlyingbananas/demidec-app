@@ -1,4 +1,4 @@
-package QuestionPane;
+package GUI.QuestionPane;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

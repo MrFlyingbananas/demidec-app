@@ -1,4 +1,7 @@
-package QuestionPane;
+package Database;
+
+import GUI.QuestionPane.Question;
+import GUI.QuestionPane.Test;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
