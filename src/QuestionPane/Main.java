@@ -26,6 +26,7 @@ public class Main {
         frame = new JFrame();
         new TopMenu(frame, this);
         frame.setPreferredSize(new Dimension(600, 600));
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainMenu = new MainMenu(frame, this);
         frame.add(mainMenu);

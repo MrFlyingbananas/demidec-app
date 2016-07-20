@@ -330,11 +330,5 @@ public class DBCreator {
                 e.printStackTrace();
             }
         }
-
-
-
-
     }
-
-
 }
