@@ -48,7 +48,7 @@ public class DBCreator {
                 public void startDocument(){
                     try {
                         System.out.println("Connecting to db...");
-                        connection = DriverManager.getConnection("jdbc:sqlite:sample.db");
+                        connection = DriverManager.getConnection("jdbc:sqlite:database.db");
                         System.out.println("Connected to db!");
                         DatabaseMetaData metaData = connection.getMetaData();
                         stmnt = connection.createStatement();

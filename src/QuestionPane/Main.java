@@ -18,7 +18,8 @@ public class Main {
     private MainMenu mainMenu;
     public Main(){
         try {
-            DBReader.setConnection(DriverManager.getConnection("jdbc:sqlite:sample.db"));
+            DBReader.setConnection(DriverManager.getConnection("jdbc:sqlite:database.db"));
+
         } catch (SQLException e) {
             e.printStackTrace();
         }

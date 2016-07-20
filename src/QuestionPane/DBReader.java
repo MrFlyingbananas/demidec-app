@@ -71,7 +71,7 @@ public class DBReader {
     }
     private Connection con;
     private String[] tableNames, dataNames;
-    public static boolean databaseExists = false, focusQuizzesAdded = false;
+    public static boolean focusQuizzesAdded = false;
     private static Statement stmnt;
     public static void setConnection(Connection con){
         try {

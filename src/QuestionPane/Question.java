@@ -57,6 +57,8 @@ public class Question {
             choices[3] = rs.getString(QDataID.QAnswer4.getID());
             choices[4] = rs.getString(QDataID.QAnswer5.getID());
             for(int i =0; i < choices.length; i++){
+                if(choices[i] == null)
+                    continue;
                 if(choices[i].contains("<chr")){
                     while(choices[i].contains("<chr")){
                         int loc = choices[i].indexOf("<chr");
