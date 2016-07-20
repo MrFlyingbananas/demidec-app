@@ -46,8 +46,6 @@ public class QuestionPane extends JPanel implements ActionListener {
         this.setLayout(null);
         width = (int)frame.getPreferredSize().getWidth();
         height = (int)frame.getPreferredSize().getHeight();
-        questionList = DBReader.getQuestionListBySubject(DBReader.Subject.Econ, DBReader.ListOrder.Normal);
-        question = questionList.remove(0);
         buttons = new JButton[5];
         choices = new JTextPane[5];
         setMinimumSize(new Dimension(400, 400));
@@ -78,7 +76,6 @@ public class QuestionPane extends JPanel implements ActionListener {
         questionPane.setSize(width - (int)(xWindowBuffer * 1.5), (int)(height * V_QUESTION_PERCENT_SIZE));
         questionPane.setEditable(false);
         questionPane.setContentType("text/html");
-        questionPane.setText(question.getText());
         questionPane.setHighlighter(null);
         questionPane.setMargin(new Insets(10,10,10,10));
         resizeQuestion();
@@ -99,14 +96,12 @@ public class QuestionPane extends JPanel implements ActionListener {
         for(JButton b : buttons){
             b.addActionListener(this);
         }
-        String[] qChoices = question.getChoices();
         for(int i = 0; i < choices.length; i++){
             choices[i] = new JTextPane();
             choices[i].putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
             choices[i].setContentType("text/html");
             choices[i].setBorder(javax.swing.BorderFactory.createEmptyBorder());
             choices[i].setBackground(this.getBackground());
-            choices[i].setText(qChoices[i]);
             choices[i].setHighlighter(null);
             choices[i].setEditable(false);
             choices[i].setOpaque(false);

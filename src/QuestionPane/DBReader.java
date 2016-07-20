@@ -71,6 +71,7 @@ public class DBReader {
     }
     private Connection con;
     private String[] tableNames, dataNames;
+    public static boolean databaseExists = false, focusQuizzesAdded = false;
     private static Statement stmnt;
     public static void setConnection(Connection con){
         try {
@@ -78,6 +79,7 @@ public class DBReader {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
     }
     private static ResultSet getData(SelectionID selection, TableID table, String filter){
         try {
