@@ -1,22 +1,19 @@
 package GUI;
 
+import Database.LoadingFrame;
 import GUI.QuestionPane.Question;
 import GUI.QuestionPane.QuestionPane;
 import GUI.MainMenu.*;
 import Database.DBAccess;
 import GUI.QuestionPane.TopMenu;
-
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.Dimension;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
-
 /**
  * Created by mrfly on 7/19/2016.
  */
@@ -25,13 +22,11 @@ public class Main {
     private QuestionPane questionPane;
     private MainMenu mainMenu;
     private TopMenu topBar;
+    private LoadingFrame loadingFrame;
     public Main(){
-        try {
-            DBAccess.setConnection(DriverManager.getConnection("jdbc:sqlite:database.db"));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        loadingFrame = new LoadingFrame("Launching Application!");
+        loadingFrame.setProgressUnknown(true);
+        DBAccess.setupConnection();
         frame = new JFrame();
         topBar = new TopMenu(frame, this);
         frame.setPreferredSize(new Dimension(600, 600));
@@ -51,11 +46,13 @@ public class Main {
             e.printStackTrace();
         }
         questionPane = new QuestionPane(frame);
+        loadingFrame.finish();
         frame.setVisible(true);
     }
     public static void main(String[] args){
         new Main();
     }
+
     public void changeQuestionSet(List<Question> questions){
         questionPane.changeQuestionSet(questions);
         frame.remove(mainMenu);
@@ -71,9 +68,22 @@ public class Main {
         int result = fileChooser.showOpenDialog(frame);
         if (result == JFileChooser.APPROVE_OPTION) {
             System.out.println("File selected!");
-            DBAccess.addFilesToDatabase(fileChooser.getSelectedFiles());
-            DBAccess.updateCache();
-            topBar.updateMenu();
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    DBAccess.addFilesToDatabase(fileChooser.getSelectedFiles());
+                    DBAccess.updateCache();
+                    topBar.updateMenu();
+                }
+            });
+            thread.start();
         }
+    }
+
+    public void switchToMainMenu() {
+        frame.remove(questionPane);
+        frame.add(mainMenu);
+        frame.revalidate();
+        frame.repaint();
     }
 }
