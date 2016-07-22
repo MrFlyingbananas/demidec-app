@@ -6,6 +6,7 @@ import GUI.QuestionPane.TestSet;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import javax.swing.SwingUtilities;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -21,6 +22,7 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -33,11 +35,12 @@ import java.util.Stack;
  * Created by cisom on 6/23/16.
  */
 public class DBAccess {
-    public enum ListOrder{
+    public enum ListOrder {
         Random,
         Normal,
         Inverse;
     }
+
     private enum SelectionID {
         All("*"),
         SubjectLong("SubjectLong"),
@@ -47,18 +50,22 @@ public class DBAccess {
         TestName("TestName"),
         Subtitle("Subtitle"),
         ResourceTypeID("ResourceTypeID"),
-        SetName("SetName");
+        SetName("SetName"),
+        ResourceType("ResourceType");
 
         final String id;
-        SelectionID(String id){
+
+        SelectionID(String id) {
             this.id = id;
         }
+
         @Override
         public String toString() {
             return this.id;
         }
     }
-    private enum TableID{
+
+    private enum TableID {
         CardTypes("CardTypes"),
         Outlines("Outlines"),
         OutlinesAndQuestions("OutlinesAndQuestions"),
@@ -70,15 +77,18 @@ public class DBAccess {
         TestAndQuestions("TestAndQuestions");
 
         final String id;
-        TableID(String id){
+
+        TableID(String id) {
             this.id = id;
         }
+
         @Override
         public String toString() {
             return this.id;
         }
     }
-    public enum Subject{
+
+    public enum Subject {
         Art(41),
         Econ(42),
         LangLit(43),
@@ -87,56 +97,82 @@ public class DBAccess {
         SocialSci(47);
         final int subjectID;
 
-        Subject(int subjectID){
+        Subject(int subjectID) {
             this.subjectID = subjectID;
         }
+
         public String toString() {
             return Integer.toString(subjectID);
         }
+
         int getSubjectID() {
             return subjectID;
         }
     }
-    public enum ResourceTypeID{
-        FocusQuiz(368),
-        ComprehensiveExam(371);
 
-        final int id;
-        ResourceTypeID(int id){
+    public enum ResourceType {
+        FocusQuiz("Focused Quizzes"),
+        ComprehensiveExam("Comprehensive Exams"),
+        SectionExam("Section Exams"),
+        LevelExam("Leveled Exams");
+        final String id;
+
+        ResourceType(String id) {
             this.id = id;
         }
+
         @Override
         public String toString() {
-            return Integer.toString(id);
+            return id;
         }
     }
+
     private static Connection con;
     private static Subject[] focusQuizSubjects, levelExamSubjects, sectionExamSubjects, comprehensiveExamSubjects, flashcardSubjects;
     private static Statement stmnt;
-    public static void setConnection(Connection con1){
+
+    public static void setupConnection() {
         try {
-            stmnt = con1.createStatement();
-            con = con1;
+            File settingsDir = getSettingsDirectory();
+            con = DriverManager.getConnection("jdbc:sqlite:" + settingsDir.getPath() + "\\" + "database.db");
+            stmnt = con.createStatement();
         } catch (SQLException e) {
             e.printStackTrace();
         }
         updateCache();
     }
-    private static ResultSet getData(SelectionID selection, TableID table, String filter){
+
+    private static File getSettingsDirectory() {
+        String userHome = System.getProperty("user.home");
+        if (userHome == null) {
+            throw new IllegalStateException("user.home==null");
+        }
+        File home = new File(userHome);
+        File settingsDirectory = new File(home, ".DemiDec App");
+        if (!settingsDirectory.exists()) {
+            if (!settingsDirectory.mkdir()) {
+                throw new IllegalStateException(settingsDirectory.toString());
+            }
+        }
+        return settingsDirectory;
+    }
+
+    private static ResultSet getData(SelectionID selection, TableID table, String filter) {
         try {
-            return stmnt.executeQuery("SELECT " + selection+ " FROM " + table + " " + filter);
+            return stmnt.executeQuery("SELECT " + selection + " FROM " + table + " " + filter);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
-    private static ResultSet getData(SelectionID[] selections, TableID table, String filter){
+
+    private static ResultSet getData(SelectionID[] selections, TableID table, String filter) {
         try {
             String selection = "";
-            for(int i = 0; i < selections.length; i++){
+            for (int i = 0; i < selections.length; i++) {
                 selection += selections[i];
-                if(i +
-                        1 != selections.length){
+                if (i +
+                        1 != selections.length) {
                     selection += " AND ";
                 }
             }
@@ -147,12 +183,13 @@ public class DBAccess {
         return null;
 
     }
-    private static ResultSet getData(SelectionID selection, TableID[] tables, String filter){
+
+    private static ResultSet getData(SelectionID selection, TableID[] tables, String filter) {
         try {
             String table = "";
-            for(int i = 0; i < tables.length; i++){
+            for (int i = 0; i < tables.length; i++) {
                 table += tables[i];
-                if(i + 1 != tables.length){
+                if (i + 1 != tables.length) {
                     table += " AND ";
                 }
             }
@@ -163,17 +200,18 @@ public class DBAccess {
         return null;
 
     }
-    public static List<Question> getQuestionListBySubject(Subject subject, ListOrder order){
-        ResultSet rs = getData(SelectionID.All, TableID.Questions, "WHERE SubjectID=" + subject.subjectID);
+
+    public static List<Question> getQuestionListBySubject(Subject subject, ListOrder order) {
+        ResultSet rs = getData(SelectionID.All, TableID.Questions, "WHERE SubjectID=" + subject.subjectID + " AND " + SelectionID.ResourceTypeID + "=" + getResourceTypeIDByResourceType(ResourceType.FocusQuiz));
         List<Question> questions = new ArrayList<>();
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 questions.add(new Question(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        switch(order){
+        switch (order) {
             case Random:
                 Collections.shuffle(questions);
                 break;
@@ -183,7 +221,7 @@ public class DBAccess {
         return questions;
     }
 
-    public static String getSubjectString(Subject subject){
+    public static String getSubjectString(Subject subject) {
         try {
             return getData(SelectionID.SubjectLong, TableID.Subjets, "WHERE " + SelectionID.SubjectID + "=" + subject.getSubjectID()).getString(SelectionID.SubjectLong.toString());
         } catch (SQLException e) {
@@ -191,28 +229,56 @@ public class DBAccess {
         }
         return null;
     }
-    public static List<TestSet> getTestSetListByResourceTypeID(ResourceTypeID resourceID){
+
+    public static List<TestSet> getTestSetListByResourceType(ResourceType resourceType) {
         List<TestSet> testSets = new ArrayList<TestSet>();
-        ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " +SelectionID.ResourceTypeID + "=" + resourceID);
+        boolean hasTable = false;
+        DatabaseMetaData meta = null;
         try {
-            while(rs.next()){
-                int setID = rs.getInt(SelectionID.TestSetID.toString());
-                String setName = rs.getString(SelectionID.SetName.toString());
-                int subID = rs.getInt(SelectionID.SubjectID.toString());
-                Subject sub = null;
-                for(int i = 0; i < Subject.values().length; i++){
-                    if(Subject.values()[i].getSubjectID() == subID){
-                        sub = Subject.values()[i];
-                    }
-                }
-                testSets.add(new TestSet(setID, setName, sub, resourceID));
+            meta = con.getMetaData();
+            ResultSet test = meta.getTables(null, null, TableID.ResourceTypes.toString(), new String[]{"TABLE"});
+            while (test.next()) {
+                if (test.getString("TABLE_NAME").equals(TableID.ResourceTypes.toString()))
+                    hasTable = true;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return testSets;
+
+        if (hasTable) {
+            ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " + SelectionID.ResourceTypeID + "=" + getResourceTypeIDByResourceType(resourceType));
+            try {
+                while (rs.next()) {
+                    int setID = rs.getInt(SelectionID.TestSetID.toString());
+                    String setName = rs.getString(SelectionID.SetName.toString());
+                    int subID = rs.getInt(SelectionID.SubjectID.toString());
+                    Subject sub = null;
+                    for (int i = 0; i < Subject.values().length; i++) {
+                        if (Subject.values()[i].getSubjectID() == subID) {
+                            sub = Subject.values()[i];
+                        }
+                    }
+                    testSets.add(new TestSet(setID, setName, sub, resourceType));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return testSets;
+        }else {
+            return testSets;
+        }
     }
-    public static List<Test> getTestListByTestSet(TestSet set, ListOrder questionOrder){
+
+    private static int getResourceTypeIDByResourceType(ResourceType resourceType) {
+        try {
+            return getData(SelectionID.ResourceTypeID, TableID.ResourceTypes, "WHERE " + SelectionID.ResourceType + "=" + "'" + resourceType + "'").getInt(SelectionID.ResourceTypeID.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static List<Test> getTestListByTestSet(TestSet set, ListOrder questionOrder) {
         List<Test> tests = new ArrayList<Test>();
         ResultSet testSets = getData(SelectionID.All, TableID.Tests, "WHERE " + SelectionID.TestSetID + "=" + set.getSetID());
         List<String> subtitles = new ArrayList<String>();
@@ -224,13 +290,13 @@ public class DBAccess {
                 testNames.add(testSets.getInt(SelectionID.TestName.toString()));
                 subtitles.add(testSets.getString(SelectionID.Subtitle.toString()));
             }
-            for(int testID : testIDs){
+            for (int testID : testIDs) {
                 ResultSet resultSet = getData(SelectionID.All, TableID.Questions, "WHERE " + SelectionID.TestID + "=" + testID);
                 List<Question> questions = new ArrayList<Question>();
-                while(resultSet.next()){
+                while (resultSet.next()) {
                     questions.add(new Question(resultSet));
                 }
-                switch(questionOrder){
+                switch (questionOrder) {
                     case Random:
                         Collections.shuffle(questions);
                         break;
@@ -239,8 +305,8 @@ public class DBAccess {
                 }
                 questionSets.add(questions);
             }
-            for(int i = 0; i < questionSets.size(); i++){
-                if(subtitles.get(i).length() == 0){
+            for (int i = 0; i < questionSets.size(); i++) {
+                if (subtitles.get(i).length() < 3) {
                     subtitles.set(i, getSubjectString(set.getSubject()) + " " + set.getSetName() + " " + testNames.get(i));
                 }
                 tests.add(new Test(set.getSubject(), testIDs.get(i), testNames.get(i), subtitles.get(i), questionSets.get(i)));
@@ -248,11 +314,10 @@ public class DBAccess {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println(tests.size());
         return tests;
     }
 
-    public static List<Test> getTestListBySubject(Subject subject, ListOrder questionOrder){
+    public static List<Test> getTestListBySubject(Subject subject, ListOrder questionOrder) {
         // TODO: 7/20/2016 OUTDATED DO NOT USE
         List<Test> tests = new ArrayList<Test>();
         int testSetID = 0;
@@ -267,13 +332,13 @@ public class DBAccess {
                 testNames.add(testSets.getInt(SelectionID.TestName.toString()));
                 subtitles.add(testSets.getString(SelectionID.Subtitle.toString()));
             }
-            for(int testID : testIDs){
+            for (int testID : testIDs) {
                 ResultSet resultSet = getData(SelectionID.All, TableID.Questions, "WHERE " + SelectionID.TestID + "=" + testID);
                 List<Question> questions = new ArrayList<Question>();
-                while(resultSet.next()){
+                while (resultSet.next()) {
                     questions.add(new Question(resultSet));
                 }
-                switch(questionOrder){
+                switch (questionOrder) {
                     case Random:
                         Collections.shuffle(questions);
                         break;
@@ -283,43 +348,44 @@ public class DBAccess {
                 questionSets.add(questions);
             }
             System.out.println("TOTAL STUFF: " + questionSets.size());
-            for(int i = 0; i < questionSets.size(); i++){
+            for (int i = 0; i < questionSets.size(); i++) {
                 tests.add(new Test(subject, testIDs.get(i), testNames.get(i), subtitles.get(i), questionSets.get(i)));
             }
             System.out.println(subject + ": " + tests.size());
-        }catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return tests;
     }
-    public static Subject[] getFocusQuizSubjects(){
+
+    public static Subject[] getFocusQuizSubjects() {
         return focusQuizSubjects;
     }
-    public static void updateCache(){
+
+    public static void updateCache() {
         try {
             DatabaseMetaData meta = con.getMetaData();
-            ResultSet test = meta.getTables(null, null, TableID.TestSets.toString(), new String[] {"TABLE"});
+            ResultSet test = meta.getTables(null, null, TableID.TestSets.toString(), new String[]{"TABLE"});
             boolean hasTable = false;
-            while(test.next()){
-                if(test.getString("TABLE_NAME").equals(TableID.TestSets.toString()))
+            while (test.next()) {
+                if (test.getString("TABLE_NAME").equals(TableID.TestSets.toString()))
                     hasTable = true;
             }
-            if(hasTable){
-                ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " + SelectionID.ResourceTypeID + "=" + ResourceTypeID.FocusQuiz);
+            if (hasTable) {
+                ResultSet rs = getData(SelectionID.All, TableID.TestSets, "WHERE " + SelectionID.ResourceTypeID + "=" + getResourceTypeIDByResourceType(ResourceType.FocusQuiz));
                 List<Integer> list = new ArrayList<>();
-                while(rs.next()){
+                while (rs.next()) {
                     list.add(rs.getInt(SelectionID.SubjectID.toString()));
                 }
                 focusQuizSubjects = new Subject[list.size()];
-                if(list.size() == 7){
+                if (list.size() == 7) {
                     focusQuizSubjects[6] = Subject.LangLit;
                 }
                 int count = 0;
-                System.out.println(list);
-                for(int j = 0; j < Subject.values().length; j++){
+                for (int j = 0; j < Subject.values().length; j++) {
                     Subject sub = Subject.values()[j];
-                    for(int i = 0; i < list.size(); i++){
-                        if(sub.getSubjectID() == list.get(i)){
+                    for (int i = 0; i < list.size(); i++) {
+                        if (sub.getSubjectID() == list.get(i)) {
                             list.remove(i);
                             focusQuizSubjects[count++] = sub;
                             break;
@@ -332,12 +398,24 @@ public class DBAccess {
             e.printStackTrace();
             return;
         }
+
     }
+
+
     public static void addFilesToDatabase(File[] files) {
         //File file1 = new File("All Focused Quizzes.bin");
         //File file = new File("temp.xml");
-        for(File file : files) {
-            DefaultHandler handler = new DefaultHandler(){
+        LoadingFrame frame = new LoadingFrame("Files loading, please wait", 0, files.length);
+        int progress = 0;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                frame.setProgressText(0 + "/" + files.length + " files read");
+                frame.setProgress(0 / files.length);
+            }
+        });
+        for (File file : files) {
+            DefaultHandler handler = new DefaultHandler() {
                 private List<String> brokenSQL;
                 private SQLCommand sqlCommand;
                 private ArrayList<String> tables = new ArrayList<String>();
@@ -348,13 +426,14 @@ public class DBAccess {
                 private int maxValueQueue = 1000;
                 private Statement stmnt;
                 private int acceptedParams;
+
                 @Override
-                public void startDocument(){
+                public void startDocument() {
                     try {
                         DatabaseMetaData metaData = con.getMetaData();
                         stmnt = con.createStatement();
                         ResultSet rs = metaData.getTables(null, null, null, new String[]{"TABLE"});
-                        while(rs.next()){
+                        while (rs.next()) {
                             tables.add(rs.getString("TABLE_NAME"));
                         }
                         brokenSQL = new ArrayList<>();
@@ -366,7 +445,7 @@ public class DBAccess {
 
                 @Override
                 public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) throws SAXException {
-                    if(first) {
+                    if (first) {
                         root = new Node(qName);
                         first = false;
                         order.add(root);
@@ -382,9 +461,9 @@ public class DBAccess {
                 @Override
                 public void endElement(String uri, String localName, String qName) {
                     order.pop();
-                    if(!order.empty() && order.peek() == root){
+                    if (!order.empty() && order.peek() == root) {
                         Node workingNode = root.getChildren().get(0);
-                        if(!tables.contains(workingNode.getName())) {
+                        if (!tables.contains(workingNode.getName())) {
                             String sql = "CREATE TABLE " + workingNode.getName() + "\n(\n";
                             for (int i = 0; i < workingNode.getChildren().size(); i++) {
                                 Node child = workingNode.getChildren().get(i);
@@ -393,7 +472,7 @@ public class DBAccess {
                                     sql += ",\n";
                                 }
                             }
-                            sql += "PRIMARY KEY (" + workingNode.getChildren().get(0).getName() +")";
+                            sql += "PRIMARY KEY (" + workingNode.getChildren().get(0).getName() + ")";
                             sql += "\n);";
                             tables.add(qName);
                             try {
@@ -403,69 +482,69 @@ public class DBAccess {
                                 e.printStackTrace();
                                 System.out.println(sql);
                             }
-                            if(sqlCommand != null){
+                            if (sqlCommand != null) {
                                 addSQLToBatch(sqlCommand.command);
                                 valuesQueued = 0;
                             }
 
                         }
-                        if(sqlCommand == null){
+                        if (sqlCommand == null) {
                             createSqlStatement(workingNode);
                         }
-                        if(!sqlCommand.table.equals(workingNode.getName())){
+                        if (!sqlCommand.table.equals(workingNode.getName())) {
                             addSQLToBatch(sqlCommand.command);
                             valuesQueued = 0;
                             createSqlStatement(workingNode);
                         }
-                        if(workingNode.getChildren().size() != acceptedParams){
+                        if (workingNode.getChildren().size() != acceptedParams) {
                             //System.out.println(workingNode.getChildren().get(0).data);
                             String data = "";
-                            for(int i = 0; i < workingNode.getChildren().size(); i++){
+                            for (int i = 0; i < workingNode.getChildren().size(); i++) {
                                 Node child = workingNode.getChildren().get(i);
                                 child.data = child.data.replace("\'", "\'\'");
                                 data += "'" + child.data + "'";
-                                if(i + 1 < workingNode.getChildren().size()) {
+                                if (i + 1 < workingNode.getChildren().size()) {
                                     data += ", ";
                                 }
                             }
                             data = data.trim();
-                            if(data.charAt(data.length() - 1) == ','){
+                            if (data.charAt(data.length() - 1) == ',') {
                                 data = data.substring(0, data.length() - 1);
                             }
                             String sql = "INSERT OR IGNORE INTO " + workingNode.getName() + " (";
                             String column = "";
-                            for(int i = 0; i < workingNode.getChildren().size(); i++){
+                            for (int i = 0; i < workingNode.getChildren().size(); i++) {
                                 Node child = workingNode.getChildren().get(i);
                                 column += "'" + child.getName() + "'";
-                                if(i + 1 < workingNode.getChildren().size()) {
+                                if (i + 1 < workingNode.getChildren().size()) {
                                     column += ", ";
                                 }
                             }
                             column = column.trim();
-                            if(column.charAt(column.length() - 1) == ','){
+                            if (column.charAt(column.length() - 1) == ',') {
                                 column = column.substring(0, column.length() - 1);
                             }
-                            sql +=column + ")\nVALUES" + "(" + data + ")";
+                            sql += column + ")\nVALUES" + "(" + data + ")";
                             brokenSQL.add(sql);
                         }
-                        if(workingNode.getChildren().size() == acceptedParams){
+                        if (workingNode.getChildren().size() == acceptedParams) {
                             String data = "";
-                            for(int i = 0; i < workingNode.getChildren().size(); i++){
+                            for (int i = 0; i < workingNode.getChildren().size(); i++) {
                                 Node child = workingNode.getChildren().get(i);
                                 child.data = child.data.replace("\'", "\'\'");
                                 data += "'" + child.data + "'";
-                                if(i + 1 < workingNode.getChildren().size()) {
+                                if (i + 1 < workingNode.getChildren().size()) {
                                     data += ", ";
                                 }
                             }
                             data = data.trim();
-                            if(data.charAt(data.length() - 1) == ','){
+                            if (data.charAt(data.length() - 1) == ',') {
                                 data = data.substring(0, data.length() - 1);
                             }
-                            if(valuesQueued < maxValueQueue){
+                            if (valuesQueued < maxValueQueue) {
                                 sqlCommand.command += "(" + data + "), ";
                                 valuesQueued++;
-                            }else{
+                            } else {
                                 addSQLToBatch(sqlCommand.command);
                                 createSqlStatement(workingNode);
                                 sqlCommand.command += "(" + data + "),  ";
@@ -477,48 +556,48 @@ public class DBAccess {
                         order.add(root);
                     }
 
-                /*if(order.peek() != root)
+            /*if(order.peek() != root)
+                order.pop();
+            if(order.peek() == root) {
+                for (Node<String> parent : root.getChildren()) {
+                    for(Node<String> child : parent.getChildren()){
+                        System.out.println(child.getName() + ": " + child.getData());
+                    }
+                }
+            }*/
+            /* if(order.peek() == root){
+                for(Node<String> parent : root.getChildren()){
+
+                }
+                /*for(Node<String> parent : root.getChildren()){
+                    String sql = "CREATE TABLE " + parent.getName() + "(";
+                    String primaryKey = "PRIMARY KEY(" + parent.getData() + ")" + System.getProperty("line.separator") + ");";
+                    for(Node<String> child : parent.getChildren()){
+                        sql += child.getData() + " ";
+                        try{
+                            int temp = Integer.parseInt(child.getData());
+                            sql+= "INT, " + System.getProperty("line.separator");
+                        }catch(NumberFormatException e){
+                            sql += "NVARCHAR, " + System.getProperty("line.separator");
+                        }
+                    }
+                    sql +=  primaryKey;
+
+                    try {
+                        stmnt.executeUpdate(sql);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    root = new Node<String>("root");
                     order.pop();
-                if(order.peek() == root) {
-                    for (Node<String> parent : root.getChildren()) {
-                        for(Node<String> child : parent.getChildren()){
-                            System.out.println(child.getName() + ": " + child.getData());
-                        }
-                    }
+                    order.add(root);
                 }*/
-                /* if(order.peek() == root){
-                    for(Node<String> parent : root.getChildren()){
-
-                    }
-                    /*for(Node<String> parent : root.getChildren()){
-                        String sql = "CREATE TABLE " + parent.getName() + "(";
-                        String primaryKey = "PRIMARY KEY(" + parent.getData() + ")" + System.getProperty("line.separator") + ");";
-                        for(Node<String> child : parent.getChildren()){
-                            sql += child.getData() + " ";
-                            try{
-                                int temp = Integer.parseInt(child.getData());
-                                sql+= "INT, " + System.getProperty("line.separator");
-                            }catch(NumberFormatException e){
-                                sql += "NVARCHAR, " + System.getProperty("line.separator");
-                            }
-                        }
-                        sql +=  primaryKey;
-
-                        try {
-                            stmnt.executeUpdate(sql);
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                        root = new Node<String>("root");
-                        order.pop();
-                        order.add(root);
-                    }*/
 
                 }
 
                 private void addSQLToBatch(String sqlStmnt) {
                     sqlStmnt = sqlStmnt.trim();
-                    if(sqlStmnt.charAt(sqlStmnt.length() - 1) == ',')
+                    if (sqlStmnt.charAt(sqlStmnt.length() - 1) == ',')
                         sqlStmnt = sqlStmnt.substring(0, sqlStmnt.length() - 1) + ";";
                     try {
                         stmnt.addBatch(sqlStmnt);
@@ -526,23 +605,23 @@ public class DBAccess {
                     } catch (SQLException e) {
                         e.printStackTrace();
                         System.exit(0);
-                    /*int begin =  sqlStmnt.substring(0, sqlStmnt.indexOf("VALUES") + 6).length();
-                    String sql = sqlStmnt.substring(0, sqlStmnt.indexOf("VALUES") + 6);
-                    while(begin < sqlStmnt.length()){
-                        int parLoc = sqlStmnt.indexOf('(', begin);
-                        String values = sqlStmnt.substring(parLoc, sqlStmnt.indexOf(')', parLoc) + 1);
-                        String command = sql + values;
-                        try {
-                            stmnt.addBatch(command);
-                            stmnt.executeBatch();
-                            stmnt.clearBatch();
-                        } catch (SQLException e1) {
-                            e1.printStackTrace();
-                            System.out.println(command);
-                            System.exit(0);
-                        }
-                        begin += values.length();
-                    }*/
+                /*int begin =  sqlStmnt.substring(0, sqlStmnt.indexOf("VALUES") + 6).length();
+                String sql = sqlStmnt.substring(0, sqlStmnt.indexOf("VALUES") + 6);
+                while(begin < sqlStmnt.length()){
+                    int parLoc = sqlStmnt.indexOf('(', begin);
+                    String values = sqlStmnt.substring(parLoc, sqlStmnt.indexOf(')', parLoc) + 1);
+                    String command = sql + values;
+                    try {
+                        stmnt.addBatch(command);
+                        stmnt.executeBatch();
+                        stmnt.clearBatch();
+                    } catch (SQLException e1) {
+                        e1.printStackTrace();
+                        System.out.println(command);
+                        System.exit(0);
+                    }
+                    begin += values.length();
+                }*/
 
 
                     }
@@ -552,18 +631,18 @@ public class DBAccess {
                     acceptedParams = workingNode.getChildren().size();
                     sqlCommand = new SQLCommand("INSERT OR IGNORE INTO " + workingNode.getName() + " (", workingNode.getName());
                     String column = "";
-                    for(int i = 0; i < workingNode.getChildren().size(); i++){
+                    for (int i = 0; i < workingNode.getChildren().size(); i++) {
                         Node child = workingNode.getChildren().get(i);
                         column += "'" + child.getName() + "'";
-                        if(i + 1 < workingNode.getChildren().size()) {
+                        if (i + 1 < workingNode.getChildren().size()) {
                             column += ", ";
                         }
                     }
                     column = column.trim();
-                    if(column.charAt(column.length() - 1) == ','){
+                    if (column.charAt(column.length() - 1) == ',') {
                         column = column.substring(0, column.length() - 1);
                     }
-                    sqlCommand.command +=column + ")\nVALUES";
+                    sqlCommand.command += column + ")\nVALUES";
                 }
 
                 @Override
@@ -575,12 +654,12 @@ public class DBAccess {
                 }
 
                 @Override
-                public void endDocument(){
+                public void endDocument() {
                     try {
-                        if(valuesQueued != 0){
+                        if (valuesQueued != 0) {
                             addSQLToBatch(sqlCommand.command);
                         }
-                        for(String sql : brokenSQL){
+                        for (String sql : brokenSQL) {
                             stmnt.addBatch(sql);
                         }
                         System.out.println("EXEC BATCH");
@@ -628,6 +707,16 @@ public class DBAccess {
             } catch (ParserConfigurationException | SAXException | IOException e) {
                 e.printStackTrace();
             }
+            progress++;
+            final int progressFinal = progress;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    frame.setProgressText(progressFinal + "/" + files.length + " files read");
+                    frame.setProgress(progressFinal);
+                }
+            });
         }
+        frame.finish();
     }
 }
