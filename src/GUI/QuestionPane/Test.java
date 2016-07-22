@@ -37,7 +37,7 @@ public class Test {
         this.questions = questions;
         this.testNumber = testNumber;
         if(subtitle.length() == 0)
-            this.subtitle = DBAccess.getSubjectString(subject) + " Quiz " + testNumber;
+            this.subtitle = DBAccess.getSubjectString(subject) + " " + testNumber;
     }
     public List<Question> getQuestions(){
         return questions;

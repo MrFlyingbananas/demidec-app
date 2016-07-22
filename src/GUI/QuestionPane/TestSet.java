@@ -12,12 +12,12 @@ public class TestSet {
     private int setID;
     private String setName;
     private Subject subject;
-    private DBAccess.ResourceTypeID resourceTypeID;
-    public TestSet(int testSetID, String setName, Subject subject, DBAccess.ResourceTypeID resourceTypeID){
+    private DBAccess.ResourceType resourceType;
+    public TestSet(int testSetID, String setName, Subject subject, DBAccess.ResourceType resourceType){
         this.setID = testSetID;
         this.setName = setName;
         this.subject = subject;
-        this.resourceTypeID = resourceTypeID;
+        this.resourceType = resourceType;
     }
 
     public int getSetID() {
@@ -32,8 +32,8 @@ public class TestSet {
         return subject;
     }
 
-    public DBAccess.ResourceTypeID getResourceTypeID() {
-        return resourceTypeID;
+    public DBAccess.ResourceType getResourceType() {
+        return resourceType;
     }
 
 }
