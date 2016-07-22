@@ -1,8 +1,9 @@
-package GUI.QuestionPane;
+package GUI;
 
 import Database.DBAccess;
-import GUI.Main;
 import Database.DBAccess.Subject;
+import Database.Test;
+import Database.TestSet;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;

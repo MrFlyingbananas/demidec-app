@@ -1,4 +1,4 @@
-package GUI.QuestionPane;
+package Database;
 
 import Database.DBAccess;
 import Database.DBAccess.Subject;

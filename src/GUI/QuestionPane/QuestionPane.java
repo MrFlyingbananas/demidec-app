@@ -1,5 +1,7 @@
 package GUI.QuestionPane;
 
+import GUI.TopMenu;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;

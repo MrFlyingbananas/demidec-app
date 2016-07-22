@@ -1,7 +1,8 @@
-package GUI.QuestionPane;
+package Database;
 
 import Database.DBAccess;
 import Database.DBAccess.Subject;
+import GUI.QuestionPane.Question;
 
 import java.util.List;
 /**

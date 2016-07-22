@@ -1,8 +1,6 @@
 package Database;
 
 import GUI.QuestionPane.Question;
-import GUI.QuestionPane.Test;
-import GUI.QuestionPane.TestSet;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
