@@ -438,7 +438,7 @@ public class DBAccess {
     public static void addFilesToDatabase(File[] files) {
         //File file1 = new File("All Focused Quizzes.bin");
         //File file = new File("temp.xml");
-        //hello
+        //hello it's me
         LoadingFrame frame = new LoadingFrame("Files loading, please wait", 0, files.length);
         int progress = 0;
         SwingUtilities.invokeLater(new Runnable() {
