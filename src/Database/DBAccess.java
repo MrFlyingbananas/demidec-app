@@ -27,12 +27,14 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.Stack;
 
 /**
  * Created by cisom on 6/23/16.
  */
 public class DBAccess {
+
     public enum ListOrder {
         Random,
         Normal,
@@ -124,16 +126,48 @@ public class DBAccess {
             return id;
         }
     }
+    public enum Setting {
+        WindowWidth("windowWidth"),
+        WindowHeight("windowHeight");
+
+        private final String id;
+
+        Setting(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return id;
+        }
+    }
 
     private static Connection con;
-    private static Subject[] focusQuizSubjects, levelExamSubjects, sectionExamSubjects, comprehensiveExamSubjects, flashcardSubjects;
+    private static Subject[] focusQuizSubjects;
     private static Statement stmnt;
-
+    private static Properties properties;
     public static void setupConnection() {
         try {
             File settingsDir = getSettingsDirectory();
             con = DriverManager.getConnection("jdbc:sqlite:" + settingsDir.getPath() + "\\" + "database.db");
             stmnt = con.createStatement();
+            properties = new Properties();
+            File config = new File(settingsDir.getPath() + "\\" + "demiconfig.properties");
+            if(config.exists()){
+                try {
+                    properties.load(new FileReader(config));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }else{
+                properties.setProperty(Setting.WindowWidth.id, "600");
+                properties.setProperty(Setting.WindowHeight.id, "600");
+                try {
+                    properties.store(new FileOutputStream(config), "Demidec settings configuration\nDo not mess with these unless you know what you're doing");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -718,4 +752,17 @@ public class DBAccess {
         }
         frame.finish();
     }
+    public static int getIntSetting(Setting setting, int def){
+        String result = properties.getProperty(setting.id);
+        if(result == null){
+            properties.setProperty(setting.id, "" + def);
+            return def;
+        }else{
+            return Integer.parseInt(result);
+        }
+    }
+    public static void setSetting(Setting setting, String value) {
+        properties.setProperty(setting.id, value);
+    }
+
 }
