@@ -37,14 +37,20 @@ public class Main {
         frame.pack();
         frame.setLocationRelativeTo(null);
 
+        // Set cross-platform Java L&F (also called "Metal")
         try {
-            // Set cross-platform Java L&F (also called "Metal")
             UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-            System.out.println(Arrays.toString(UIManager.getInstalledLookAndFeels()));
-        }
-        catch (UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
+        System.out.println(Arrays.toString(UIManager.getInstalledLookAndFeels()));
+
         questionPane = new QuestionPane(frame);
         loadingFrame.finish();
         frame.setVisible(true);
