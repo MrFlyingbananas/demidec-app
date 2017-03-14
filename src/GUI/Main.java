@@ -55,7 +55,7 @@ public class Main {
             e.printStackTrace();
         }
         questionPane = new QuestionPane(this, frame);
-        scoreScreen = new ScoreScreen(this, frame);
+        //scoreScreen = new ScoreScreen(this, frame);
         loadingFrame.finish();
         frame.setVisible(true);
     }
