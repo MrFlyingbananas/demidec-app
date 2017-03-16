@@ -9,14 +9,6 @@ import java.util.Random;
  */
 public class Question {
 
-    public boolean isCorrect() {
-        return correct;
-    }
-
-    public void setCorrect(boolean correct) {
-        this.correct = correct;
-    }
-
     enum QDataID{
         QuestionID("QuestionID"),
         Question("Question"),
@@ -54,7 +46,6 @@ public class Question {
     private String[] choices;
     private int correctAnswerIndex;
     private String answerGuide;
-    private boolean correct;
     public Question(ResultSet rs){
         try {
             Random random = new Random();
@@ -102,7 +93,6 @@ public class Question {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        correct = false;
     }
     public String[] getChoices() {
         return choices;

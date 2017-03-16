@@ -1,7 +1,6 @@
 package GUI.MainMenu;
 
 import GUI.Main;
-import GUI.QuestionPane.QuestionPane;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +23,7 @@ public class MainMenu extends JPanel implements ActionListener{
         this.frame = frame;
         this.main = main;
         setLayout(null);
-        frame.setResizable(false);
+
        /* popupMenu = new JPopupMenu("Buh?");
         JMenuItem[] items = new JMenuItem[6];
         items[0] = new JMenuItem("Art Quizzes");
